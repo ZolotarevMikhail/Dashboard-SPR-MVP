@@ -1,0 +1,1962 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Анализ продаж на Wildberries</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📊</text></svg>">
+<style>
+/* ===== Палитра в стиле sproots.ru (светлая) ===== */
+:root{
+  color-scheme: light;
+  --surface-1:#ffffff; --surface-2:#f9f9f9; --page:#f9f9f9;
+  --ink-1:#151515; --ink-2:#555555; --ink-3:#888888;
+  --grid:#eeeeee; --axis:#cccccc; --ring:#e0e0e0;
+  --card:#ffffff;
+  --accent:#fbcf02;            /* фирменный жёлтый SPROOTS */
+  --series-1:#151515; --series-2:#fbcf02; --series-3:#2e7d32; --series-4:#2188bc;
+  --series-5:#888888; --series-6:#0088cc; --series-7:#78e026; --series-8:#d03b3b;
+  --good:#2e7d32; --warn:#e8a300; --serious:#ec835a; --crit:#d03b3b;
+  --good-ink:#2e7d32;
+  --shadow:0 1px 2px rgba(21,21,21,.06);
+}
+/* ===== Тёмная тема (по системному предпочтению) ===== */
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme:dark;
+    --surface-1:#1f1f1f; --surface-2:#151515; --page:#151515;
+    --ink-1:#ffffff; --ink-2:#bdbdbd; --ink-3:#888888;
+    --grid:#2a2a2a; --axis:#3a3a3a; --ring:#333333;
+    --card:#1f1f1f;
+    --accent:#fbcf02;
+    --series-1:#d4d4d4; --series-2:#fbcf02; --series-3:#78e026; --series-4:#3a9fd4;
+    --series-5:#888888; --series-6:#3a9fd4; --series-7:#78e026; --series-8:#ff6b6b;
+    --good:#78e026; --warn:#fbcf02; --serious:#ec835a; --crit:#ff6b6b;
+    --good-ink:#78e026;
+    --shadow:0 1px 2px rgba(0,0,0,.5);
+  }
+}
+/* ===== Тёмная тема (явный переключатель) ===== */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --surface-1:#1f1f1f; --surface-2:#151515; --page:#151515;
+  --ink-1:#ffffff; --ink-2:#bdbdbd; --ink-3:#888888;
+  --grid:#2a2a2a; --axis:#3a3a3a; --ring:#333333;
+  --card:#1f1f1f;
+  --accent:#fbcf02;
+  --series-1:#d4d4d4; --series-2:#fbcf02; --series-3:#78e026; --series-4:#3a9fd4;
+  --series-5:#888888; --series-6:#3a9fd4; --series-7:#78e026; --series-8:#ff6b6b;
+  --good:#78e026; --warn:#fbcf02; --serious:#ec835a; --crit:#ff6b6b;
+  --good-ink:#78e026;
+  --shadow:0 1px 2px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--ink-1);
+  font:15px/1.5 Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:none;margin:0;padding:20px 28px 60px;width:100%}
+body{background:var(--page)}
+@media(min-width:1800px){.wrap{padding-inline:40px}}
+@media(min-width:2400px){.wrap{padding-inline:64px}}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+header h1{font-size:22px;font-weight:800;margin:0;color:var(--ink-1);letter-spacing:-.01em}
+header .spacer{margin-left:auto}
+.muted{color:var(--ink-2);font-size:12.5px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* Кнопки */
+.btn{
+  background:var(--card); color:var(--ink-1); border:1px solid var(--ring);
+  padding:7px 13px; border-radius:4px; font:inherit; font-size:13px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn:hover{border-color:var(--axis)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent); color:#151515; border:1.5px solid #151515; font-weight:700; box-shadow:0 2px 0 #151515, 0 4px 14px rgba(251,207,2,.45); padding:8px 16px; font-size:13.5px}
+.btn-primary:hover{background:#ffd60a; box-shadow:0 2px 0 #151515, 0 6px 18px rgba(251,207,2,.6)}
+.btn-primary[disabled]{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+.icon-btn{background:var(--card);border:1px solid var(--ring);border-radius:4px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-1)}
+.icon-btn:hover{border-color:var(--axis)}
+.badge{font-size:11px;padding:2px 7px;border-radius:4px;background:rgba(21,21,21,.06);color:var(--ink-2)}
+:root[data-theme="dark"] .badge{background:rgba(255,255,255,.08)}
+
+/* Фильтры */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:14px 0;background:var(--card);border:1px solid var(--ring);border-radius:6px;padding:10px 12px;box-shadow:var(--shadow)}
+.seg{display:inline-flex;background:rgba(21,21,21,.05);border-radius:4px;padding:2px}
+:root[data-theme="dark"] .seg{background:rgba(255,255,255,.06)}
+.seg button{border:0;background:transparent;color:var(--ink-2);padding:5px 11px;border-radius:3px;font:inherit;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#151515;font-weight:600;box-shadow:none}
+.filters input[type=date]{padding:5px 8px;border:1px solid var(--ring);border-radius:4px;background:var(--card);color:var(--ink-1);font:inherit;font-size:13px}
+.filters .lab{font-size:12.5px;color:var(--ink-3);margin-right:-4px}
+.filters .sel{padding:5px 8px;border:1px solid var(--ring);border-radius:4px;background:var(--card);color:var(--ink-1);font:inherit;font-size:13px;cursor:pointer}
+.filters .sel:hover{border-color:var(--axis)}
+
+/* KPI */
+.kpi{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:14px 0}
+@media(min-width:1700px){.kpi{grid-template-columns:repeat(6,1fr);gap:14px}}
+@media(max-width:1080px){.kpi{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.kpi{grid-template-columns:repeat(2,1fr)}}
+.tile{background:var(--card);border:1px solid var(--ring);border-radius:6px;padding:13px 14px;box-shadow:var(--shadow)}
+.tile .lab{font-size:13px;color:var(--ink-1);font-weight:500;display:flex;align-items:center;gap:6px}
+.tile .val{font-size:26px;font-weight:700;margin-top:5px;letter-spacing:-.01em}
+.tile .sub{font-size:12.5px;color:var(--ink-2);font-weight:500;margin-top:3px}
+.delta{font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;gap:3px}
+.delta.up{color:var(--good-ink)} .delta.down{color:var(--crit)} .delta.flat{color:var(--ink-3)}
+
+/* Графики */
+.grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px;margin:10px 0}
+/* На ноутбуках со средним окном (≥920px) держим 2 колонки. На 920 и ниже — стек 1 колонка. */
+@media(max-width:920px){.grid2{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+@media(max-width:1100px){.grid3{grid-template-columns:1.5fr 1fr}}
+@media(max-width:560px){.grid3{grid-template-columns:1fr}}
+.pie-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pie-wrap svg{flex:0 0 auto;max-width:200px}
+.pie-legend{list-style:none;padding:0;margin:0;display:grid;gap:6px;font-size:13px;font-weight:500;color:var(--ink-1);flex:1;min-width:140px}
+.pie-legend li{display:flex;align-items:center;gap:7px}
+.pie-legend i{width:11px;height:11px;border-radius:2px;flex:0 0 auto}
+.pie-legend .pc{margin-left:auto;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.pie-center{fill:var(--ink-1);font-size:14px;font-weight:700;text-anchor:middle}
+.pie-center-sub{fill:var(--ink-2);font-size:11px;text-anchor:middle;font-weight:600}
+.card{background:var(--card);border:1px solid var(--ring);border-radius:6px;padding:14px 14px 8px;box-shadow:var(--shadow)}
+.card h2{font-size:15.5px;font-weight:700;margin:0 0 2px;display:flex;align-items:center;gap:8px;color:var(--ink-1)}
+.card .desc{font-size:12.5px;color:var(--ink-2);font-weight:500;margin-bottom:8px}
+.metric-pick{display:inline-flex;background:rgba(21,21,21,.05);border-radius:4px;padding:2px;margin-left:auto}
+:root[data-theme="dark"] .metric-pick{background:rgba(255,255,255,.06)}
+.metric-pick button{border:0;background:transparent;color:var(--ink-2);padding:3px 8px;border-radius:3px;font:inherit;font-size:11.5px;cursor:pointer}
+.metric-pick button[aria-pressed="true"]{background:var(--accent);color:#151515;font-weight:600;box-shadow:none}
+.card-head{display:flex;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap}
+svg{display:block;width:100%;height:auto;max-width:100%}
+/* Столбцовые графики: ограничиваем максимальную высоту, чтобы на узких экранах
+   бары не превращались в блин, но не через aspect-ratio (он обрезает края) */
+#dynChart,#adsChart{max-height:260px;min-height:140px}
+.chart-wrap{overflow-x:visible}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-1);font-weight:500;margin-top:2px;padding-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+/* Таблица */
+.tbl-card{margin-top:10px}
+.tbl-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:7px 8px;text-align:left;white-space:nowrap}
+th{color:var(--ink-1);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--ring);position:sticky;top:0;background:var(--card)}
+td{border-bottom:1px solid var(--grid)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr{transition:background-color .12s}
+tbody tr:hover{background:rgba(21,21,21,.04)}
+:root[data-theme="dark"] tbody tr:hover{background:rgba(255,255,255,.06)}
+td{border-bottom:1px solid var(--grid)}
+tbody tr:last-child td{border-bottom:0}
+.profit-pos{color:var(--good-ink)} .profit-neg{color:var(--crit)}
+.roi-pill{font-size:11px;padding:2px 7px;border-radius:4px;background:rgba(21,21,21,.06);color:var(--ink-1);font-weight:600;font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .roi-pill{background:rgba(255,255,255,.08)}
+.roi-pill.bad{background:rgba(208,59,59,.16);color:var(--crit);font-weight:700}
+.roi-pill.warn{background:rgba(232,163,0,.16);color:var(--warn);font-weight:700}
+.roi-pill.good{background:rgba(12,163,12,.16);color:var(--good-ink);font-weight:700}
+.stock-low{color:var(--crit);font-weight:600}
+input.cost{width:78px;padding:3px 6px;border:1px solid var(--ring);border-radius:6px;background:var(--card);color:var(--ink-1);font:inherit;font-size:12px;text-align:right}
+input.cost:focus{border-color:var(--series-1);outline:none}
+.bar-cell{position:relative;min-width:90px}
+.bar-cell i{display:block;height:7px;border-radius:3px;background:var(--series-1);margin-top:3px}
+.bar-cell i.neg{background:var(--crit)}
+
+/* SVG tooltip */
+.tooltip{position:fixed;pointer-events:none;background:var(--ink-1);color:var(--card);padding:6px 9px;border-radius:6px;font-size:11.5px;z-index:50;white-space:nowrap;opacity:0;transition:opacity .12s;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+:root[data-theme="light"] .tooltip{background:#151515;color:#fff}
+.axis-text{fill:var(--ink-3);font-size:10.5px;font-family:inherit}
+.grid-line{stroke:var(--grid);stroke-width:1}
+.baseline{stroke:var(--axis);stroke-width:1}
+
+/* Диалог настроек */
+dialog{border:1px solid var(--ring);border-radius:8px;background:var(--card);color:var(--ink-1);padding:0;max-width:520px;width:92%;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dlg-head{padding:16px 18px;border-bottom:1px solid var(--ring);display:flex;align-items:center}
+.dlg-head h3{font-size:15px;margin:0}
+.dlg-body{padding:16px 18px}
+.dlg-body label{display:block;font-size:12.5px;color:var(--ink-2);margin:12px 0 4px}
+.dlg-body input[type=text],.dlg-body input[type=password]{width:100%;padding:8px 10px;border:1px solid var(--ring);border-radius:4px;background:var(--card);color:var(--ink-1);font:inherit;font-size:13px}
+.dlg-body .hint{font-size:11.5px;color:var(--ink-3);margin-top:5px;line-height:1.4}
+.dlg-foot{padding:12px 18px;border-top:1px solid var(--ring);display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.note{font-size:11.5px;color:var(--ink-3);line-height:1.5}
+.danger{color:var(--crit)}
+.tag-ok{color:var(--good-ink);font-weight:600}
+details.acc{border-top:1px solid var(--ring);padding:12px 18px}
+details.acc summary{cursor:pointer;font-size:12.5px;color:var(--ink-2)}
+details.acc .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+/* Табы в диалоге настроек */
+.dlg-tabs{display:flex;gap:2px;padding:8px 12px 0;border-bottom:1px solid var(--ring)}
+.dlg-tabs button{border:0;background:transparent;color:var(--ink-3);padding:8px 12px;font:inherit;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;border-radius:6px 6px 0 0}
+.dlg-tabs button[aria-selected="true"]{color:var(--ink-1);border-bottom-color:var(--series-1);font-weight:600}
+.dlg-tabs button:hover{color:var(--ink-1)}
+.dlg-tab{display:none}
+.dlg-tab.active{display:block}
+.dlg-sec{margin-top:16px}
+.dlg-sec h4{font-size:13px;margin:0 0 6px;color:var(--ink-1)}
+.token-row{display:flex;gap:8px;align-items:center}
+.token-row .eye{flex:0 0 auto;width:34px;height:34px}
+.cost-tbl{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.cost-tbl th,.cost-tbl td{padding:5px 6px;text-align:left;border-bottom:1px solid var(--grid)}
+.cost-tbl th{color:var(--ink-3);font-weight:500;font-size:11px}
+.cost-tbl td input,.cost-tbl td select{width:100%;padding:4px 6px;border:1px solid var(--ring);border-radius:6px;background:var(--card);color:var(--ink-1);font:inherit;font-size:12px}
+.cost-tbl td.num{text-align:right}
+.cost-tbl-wrap{max-height:300px;overflow-y:auto;border:1px solid var(--ring);border-radius:4px;margin-top:4px}
+.pwd-status{font-size:12px;padding:6px 9px;border-radius:6px;margin-top:8px}
+.pwd-status.lock{background:rgba(208,59,59,.12);color:var(--crit)}
+.pwd-status.open{background:rgba(12,163,12,.12);color:var(--good-ink)}
+.pwd-status.none{background:rgba(21,21,21,.05);color:var(--ink-2)}
+:root[data-theme="dark"] .pwd-status.none{background:rgba(255,255,255,.06)}
+
+/* Тост */
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink-1);color:var(--card);padding:9px 16px;border-radius:4px;font-size:13px;z-index:60;box-shadow:0 4px 14px rgba(0,0,0,.3);opacity:0;transition:opacity .2s,bottom .2s}
+:root[data-theme="light"] .toast{background:#151515;color:#fff}
+.toast.show{opacity:1;bottom:26px}
+.toast.err{background:var(--crit);color:#fff}
+
+.empty{padding:30px;text-align:center;color:var(--ink-3);font-size:13px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--ring);border-top-color:var(--series-1);border-radius:50%;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+small.tag-demo{font-size:10.5px;color:var(--ink-3);background:rgba(21,21,21,.05);padding:1px 7px;border-radius:4px;margin-left:6px}
+:root[data-theme="dark"] small.tag-demo{background:rgba(255,255,255,.07)}
+
+/* Блок «Выводы» */
+.insights{margin:14px 0}
+.insights .card-head{margin-bottom:10px}
+.insights-list{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.insights-list li{position:relative;padding:7px 9px 7px 26px;border-radius:4px;background:rgba(21,21,21,.035);font-size:13.5px;line-height:1.5}
+:root[data-theme="dark"] .insights-list li{background:rgba(255,255,255,.045)}
+.insights-list li::before{content:"";position:absolute;left:9px;top:11px;width:9px;height:9px;border-radius:50%}
+.insights-list li.good::before{background:var(--good-ink)}
+.insights-list li.bad{background:rgba(208,59,59,.06)}
+:root[data-theme="dark"] .insights-list li.bad{background:rgba(255,107,107,.08)}
+.insights-list li.bad::before{background:var(--crit)}
+.insights-list li.warn{background:rgba(232,163,0,.08)}
+:root[data-theme="dark"] .insights-list li.warn{background:rgba(232,163,0,.12)}
+.insights-list li.warn::before{background:var(--warn)}
+.insights-list li.info::before{background:var(--series-2)}
+.insights-list li b{font-weight:600}
+@media(max-width:560px){.insights-list{grid-template-columns:1fr}}
+
+/* Адаптивность таблицы товаров: прячем менее важные колонки на узких экранах */
+@media(max-width:920px){
+  .tbl-hide-920{display:none}
+  .tbl-scroll table{min-width:520px}
+}
+@media(max-width:560px){
+  .tbl-hide-560{display:none}
+  .tbl-scroll table{min-width:380px}
+  th,td{padding:6px 6px;font-size:12.5px}
+}
+
+/* Адаптивность donut: сжимаем на узких экранах */
+@media(max-width:560px){
+  .pie-wrap svg{flex:0 0 auto;max-width:140px;width:140px;height:140px}
+  .pie-legend{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Анализ продаж на Wildberries</h1>
+  <small class="tag-demo" id="modeTag">демо-данные</small>
+  <span class="spacer"></span>
+  <span class="muted" id="lastSync"></span>
+  <button class="icon-btn" id="themeBtn" title="Тема"></button>
+  <button class="btn" id="csvBtn" title="Импорт CSV">⤓ CSV</button>
+  <button class="btn btn-primary" id="refreshBtn" disabled title="Загрузить свежие данные из кабинета WB">⟳ Обновить</button>
+  <button class="icon-btn" id="settingsBtn" title="Настройки">⚙</button>
+</header>
+
+<div class="filters">
+  <span class="lab">Период:</span>
+  <select id="periodSel" class="sel">
+    <option value="day">День</option>
+    <option value="week">Неделя</option>
+    <option value="month">Месяц</option>
+    <option value="year" selected>С начала года</option>
+    <option value="custom">Произвольный диапазон</option>
+  </select>
+  <span class="lab" id="anchorLab">Дата:</span>
+  <input type="date" id="anchorDate">
+  <span class="lab range-lab" hidden>от</span>
+  <input type="date" id="fromDate" class="range-date" hidden>
+  <span class="lab range-lab" hidden>до</span>
+  <input type="date" id="toDate" class="range-date" hidden>
+  <span class="lab">Тип товаров:</span>
+  <select id="typeSel" class="sel">
+    <option value="all">Все типы</option>
+  </select>
+  <button class="btn btn-ghost" id="exportBtn" title="Выгрузить видимый срез в CSV">⬇ Экспорт CSV</button>
+  <span class="muted" id="rangeLabel"></span>
+</div>
+
+<section class="kpi" id="kpi"></section>
+
+<section class="card insights" id="insights">
+  <div class="card-head"><h2>Выводы</h2><span class="muted" id="insightsSub">по текущему периоду</span></div>
+  <ul id="insightsList" class="insights-list"></ul>
+</section>
+
+<div class="grid2">
+  <div class="card">
+    <div class="card-head">
+      <h2>Динамика</h2>
+      <div class="metric-pick" id="metricPick">
+        <button aria-pressed="true" data-m="revenue">Выручка</button>
+        <button aria-pressed="false" data-m="orders">Заказы</button>
+        <button aria-pressed="false" data-m="profit">Прибыль</button>
+      </div>
+    </div>
+    <div class="desc" id="dynDesc"></div>
+    <div class="chart-wrap"><svg id="dynChart" height="220"></svg></div>
+  </div>
+  <div class="card">
+    <h2>Реклама</h2>
+    <div class="desc">Расходы на продвижение и заказы по периодам</div>
+    <div class="chart-wrap"><svg id="adsChart" height="220"></svg></div>
+  </div>
+</div>
+
+<div class="grid3">
+  <div class="card">
+    <h2>Структура продаж по типам</h2>
+    <div class="desc">Доля выручки по группам товаров — за выбранный период</div>
+    <div class="pie-wrap">
+      <svg id="pieChart" width="180" height="180" viewBox="0 0 180 180"></svg>
+      <ul id="pieLegend" class="pie-legend"></ul>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Прибыль по товарам</h2>
+    <div class="desc">Кто зарабатывает, кто тянет вниз — за выбранный период</div>
+    <div class="chart-wrap"><svg id="profitChart" height="280"></svg></div>
+  </div>
+  <div class="card">
+    <h2>Остатки по товарам</h2>
+    <div class="desc">Суммарно по всем складам WB. Красным — что заканчивается</div>
+    <div class="chart-wrap"><svg id="stockChart" height="280"></svg></div>
+  </div>
+</div>
+
+<div class="card tbl-card">
+  <div class="card-head">
+    <h2>Товары</h2>
+    <span class="muted" style="font-size:12px;margin-left:8px;display:inline-flex;align-items:center;gap:5px;background:rgba(251,207,2,.14);padding:3px 9px;border-radius:4px;color:var(--ink-1)"><span style="color:var(--accent)">✎</span> Себестоимость вводится в колонке «Себест.» и сохраняется в браузере</span>
+  </div>
+  <div class="tbl-scroll">
+    <table id="goodsTable">
+      <thead id="goodsHead"></thead>
+      <tbody id="goodsBody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="tooltip" id="tt"></div>
+<div class="toast" id="toast"></div>
+
+<dialog id="settingsDlg">
+  <div class="dlg-head"><h3>Настройки</h3></div>
+  <div class="dlg-tabs" id="dlgTabs">
+    <button aria-selected="true" data-tab="tab-conn">Подключение</button>
+    <button aria-selected="false" data-tab="tab-goods">Товары</button>
+    <button aria-selected="false" data-tab="tab-data">Данные</button>
+  </div>
+  <div class="dlg-body">
+    <!-- Вкладка: Подключение (токен + пароль) -->
+    <div class="dlg-tab active" id="tab-conn">
+      <p class="note">Чтобы дашборд тянул данные из кабинета Wildberries, нужен <b>API-токен</b>. Токен хранится <b>зашифрованным</b> — посмотреть его можно только после ввода пароля, который ты задаёшь сам.</p>
+      <div class="pwd-status none" id="pwdStatus"></div>
+      <div class="dlg-sec">
+        <h4>Пароль доступа</h4>
+        <input type="password" id="pwdIn" placeholder="Придумай пароль (для разблокировки токена)" autocomplete="new-password">
+        <div class="hint">Пароль не хранится нигде. Если забудешь — придётся заново ввести токен. Вводить пароль нужно один раз за открытие дашборда.</div>
+      </div>
+      <div class="dlg-sec">
+        <h4>API-токен Wildberries</h4>
+        <div class="token-row">
+          <input type="password" id="tokenIn" placeholder="eyJhbGciOi... (скопируй из кабинета WB)" autocomplete="off" style="flex:1">
+          <button class="icon-btn eye" id="tokenEye" title="Показать токен" type="button">👁</button>
+        </div>
+        <div class="hint">Где взять: кабинет WB → Профиль → Настройки → <b>Доступ к API</b> → создай и скопируй токен.</div>
+        <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn" id="unlockBtn" type="button">🔓 Разблокировать токен</button>
+          <button class="btn btn-ghost" id="lockBtn" type="button">🔒 Заблокировать</button>
+          <button class="btn btn-ghost" id="envBtn" type="button" title="Подтянет WB_TOKEN из /Users/nadezda/claudecode/.env через локальный serve.py">📥 Из .env</button>
+          <button class="btn btn-ghost" id="testBtn" type="button" title="Проверить токен — один запрос к WB API">🔌 Тест</button>
+        </div>
+        <div class="row" style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="rememberBtn" type="button" title="Зашифрует токен ключом этого браузера и сохранит в LocalStorage. После закрытия вкладки токен подгрузится сам.">💾 Запомнить в этом браузере</button>
+          <button class="btn btn-ghost danger" id="forgetBtn" type="button" title="Удалить токен и ключ из LocalStorage">🗑 Забыть</button>
+        </div>
+        <p class="note danger" style="margin-top:14px">⚠ Токен даёт доступ к кабинету. Не передавай его никому. Если кто-то узнал пароль или токен — перевыпусти токен в кабинете WB.</p>
+      </div>
+    </div>
+    <!-- Вкладка: Товары (себестоимость + типы) -->
+    <div class="dlg-tab" id="tab-goods">
+      <p class="note">Здесь задаются <b>себестоимость</b> (WB её не отдаёт) и <b>тип товара</b> для группировки. Значения сохраняются в браузере по артикулу.</p>
+      <div class="dlg-sec">
+        <h4>Себестоимость и типы товаров</h4>
+        <div class="cost-tbl-wrap">
+          <table class="cost-tbl" id="costTbl">
+            <thead><tr><th>Артикул</th><th>Название</th><th>Тип</th><th class="num">Себест./шт, ₽</th></tr></thead>
+            <tbody id="costBody"></tbody>
+          </table>
+        </div>
+        <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost danger" id="clearCostBtn" type="button">Очистить себестоимости</button>
+          <button class="btn btn-ghost" id="addTypeBtn" type="button">＋ Новый тип</button>
+        </div>
+
+        <div class="dlg-sec" style="margin-top:16px">
+          <h4>Массовый импорт себестоимости</h4>
+          <p class="hint">Для большого количества товаров удобнее загрузить CSV-файл (Файл → Сохранить как → CSV в Excel). Шаблон с примером: <a href="cost-template.csv" download="cost-template.csv">cost-template.csv</a>.</p>
+          <p class="hint">Колонки (любой порядок, лишние игнорируются): <code>vendorCode</code> (артикул WB), <code>nmId</code> (числовой ID карточки), <code>barcode</code> (EAN-13), <code>cost</code> (себестоимость за шт., ₽).</p>
+          <p class="hint">Сопоставление: сначала по <b>barcode</b>, затем по <b>nmId</b>, затем по <b>vendorCode</b>. Если ключ не найден — строка попадёт в отчёт «Не сопоставлено».</p>
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button class="btn" id="importCostBtn" type="button">⤓ Загрузить CSV…</button>
+            <button class="btn btn-ghost" id="exportCostBtn" type="button">� Скачать текущие себестоимости</button>
+            <input type="file" id="importCostFile" accept=".csv,text/csv" style="display:none">
+          </div>
+          <div id="importReport" class="hint" style="margin-top:8px"></div>
+        </div>
+
+        <div class="hint" style="margin-top:8px">Для демо-товаров типы заданы заранее. При подключении к WB список товаров поменяется — задай типы под свои товары. «Новый тип» добавляет вариант в выпадающие списки.</div>
+      </div>
+    </div>
+    <!-- Вкладка: Данные -->
+    <div class="dlg-tab" id="tab-data">
+      <div class="dlg-sec">
+        <h4>Источник данных</h4>
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="pickCsvBtn" type="button">Выбрать CSV-файл</button>
+          <button class="btn btn-ghost" id="loadDemoBtn" type="button">Загрузить демо-данные</button>
+        </div>
+        <p class="hint" style="margin-top:8px">Без токена дашборд работает на CSV или демо-данных. CSV нужен со столбцами: <code>date,article,qty,revenue,commission,returns,ad_spend,stock</code>.</p>
+      </div>
+      <div class="dlg-sec">
+        <h4>Начальная дата загрузки</h4>
+        <input type="date" id="initialDateIn">
+        <div class="hint" style="margin-top:6px">
+          Продажи, заказы и реклама подгружаются <b>инкрементально</b>:
+          первая загрузка — от этой даты, дальше — только новые дни (от последней даты в кэше).
+          Так обновление занимает секунды, а не минуты.
+          Если очистить кэш (кнопка ниже) — снова начнёт качать с этой даты.
+        </div>
+        <div class="row" style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-ghost" id="saveInitialBtn" type="button">Сохранить дату</button>
+          <button class="btn btn-ghost danger" id="clearCacheBtn" type="button">Очистить кэш</button>
+        </div>
+        <div id="cacheInfo" class="hint" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <span id="tokenState" class="muted"></span>
+    <span class="spacer" style="flex:1"></span>
+    <button class="btn" id="dlgCancel">Отмена</button>
+    <button class="btn btn-primary" id="dlgSave">Сохранить</button>
+  </div>
+</dialog>
+
+<input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+
+<script>
+"use strict";
+/* ============================================================
+   Анализ продаж на Wildberries — Режим 2 (Лайв-браузер).
+   Демо-данные внутри, API-загрузка по кнопке «Обновить»,
+   себестоимость и токен — в localStorage браузера.
+   ============================================================ */
+
+const $ = s => document.querySelector(s);
+const fmt = n => {
+  if(n==null||isNaN(n)) return '—';
+  const a=Math.abs(n);
+  if(a>=1e9) return (n/1e9).toFixed(1)+' млрд';
+  if(a>=1e6) return (n/1e6).toFixed(1)+' млн';
+  if(a>=1e4) return Math.round(n/1e3).toLocaleString('ru-RU')+' тыс';
+  return Math.round(n).toLocaleString('ru-RU');
+};
+const fmtR = n => (n==null||isNaN(n))?'—':fmt(n)+' ₽';
+const fmtN = n => (n==null||isNaN(n))?'—':Math.round(n).toLocaleString('ru-RU');
+const fmtPct = n => (n==null||isNaN(n))?'—':(n*100).toFixed(0)+'%';
+
+/* ---------- Состояние ---------- */
+let state = {
+  period:'year',          // day|week|month|year|custom
+  anchor:new Date(),      // опорная дата периода (для day/week/month/year)
+  customFrom:null,        // произвольный диапазон: дата «от» (Date)
+  customTo:null,          // произвольный диапазон: дата «до» (Date, не включительно)
+  metric:'revenue',       // revenue|orders|profit
+  token:'',               // расшифрованный токен (только в памяти, после ввода пароля)
+  tokenEnc: JSON.parse(localStorage.getItem('wb_token_enc')||'null'), // зашифрованный токен {enc,salt,iv} или null
+  tokenPwd:null,          // пароль (только в памяти, нигде не хранится)
+  costs: JSON.parse(localStorage.getItem('wb_costs')||'{}'), // article -> себестоимость за шт
+  types: JSON.parse(localStorage.getItem('wb_types')||'{}'), // article -> тип товара (строка)
+  extraTypes: JSON.parse(localStorage.getItem('wb_extra_types')||'[]'), // дополнительные типы (массив строк)
+  typeFilter:'all',        // 'all' или название типа
+  goods:[],                // товары [{nmId,article,name,price,cost}]
+  daily:[],                // продажи по дням [{date, lines:[{article,qty,revenue,commission,returns,adSpend,orders,stock}]}]
+  stockByArticle:{},       // текущие остатки (сумма по складам) article->шт
+  source:'demo',           // demo|api|csv
+  lastSync:null,
+  loading:false
+};
+
+/* ---------- Типы товаров ---------- */
+// Список типов можно менять под свои товары в Настройках.
+// Для демо заданы 3 группы спортивных товаров.
+const DEMO_TYPES = ['Силовые','Йога и растяжка','Аксессуары'];
+// Какой тип у демо-товара по умолчанию (по артикулу)
+const DEMO_ART_TYPE = {
+  'SP-01':'Силовые','SP-06':'Силовые','SP-08':'Силовые','SP-07':'Силовые','SP-10':'Силовые',
+  'SP-02':'Йога и растяжка','SP-03':'Йога и растяжка',
+  'SP-04':'Аксессуары','SP-05':'Аксессуары','SP-09':'Аксессуары',
+};
+// Все известные типы (объединение демо и тех, что ввёл пользователь)
+function allTypes(){
+  const set=new Set(DEMO_TYPES);
+  (state.extraTypes||[]).forEach(t=>{ if(t) set.add(t); });
+  Object.values(state.types).forEach(t=>{ if(t) set.add(t); });
+  return [...set];
+}
+// Тип товара: из введённых пользователем, иначе демо-привязка, иначе '' (без типа)
+function artType(article){
+  if(state.types[article]!=null && state.types[article]!=='') return state.types[article];
+  if(DEMO_ART_TYPE[article]) return DEMO_ART_TYPE[article];
+  return '';
+}
+
+/* ---------- Демо-товары (спортивные) ---------- */
+const DEMO_GOODS = [
+  {article:'SP-01', name:'Гантели разборные 2×5 кг', price:1490, cost:600, vol:1.0},
+  {article:'SP-02', name:'Коврик для йоги 6 мм',     price:990,  cost:350, vol:1.3},
+  {article:'SP-03', name:'Резинки фитнес набор',     price:690,  cost:180, vol:1.7},
+  {article:'SP-04', name:'Бутылка спортивная 750 мл',price:590, cost:150, vol:1.4},
+  {article:'SP-05', name:'Скакалка профессиональная',price:390, cost:110, vol:0.9},
+  {article:'SP-06', name:'Эспандер кистевой',        price:1290, cost:520, vol:0.6},
+  {article:'SP-07', name:'Ролик для пресса',          price:890,  cost:340, vol:0.8},
+  {article:'SP-08', name:'Перчатки тренажёрные',     price:690,  cost:220, vol:1.1},
+  {article:'SP-09', name:'Мяч массажный шипованный', price:490,  cost:160, vol:0.5},
+  {article:'SP-10', name:'Петли TRX для тренировок', price:1990, cost:820, vol:0.7},
+];
+// разные «успешности»: товар с низким vol + высокой себестоимостью → убыток
+
+/* Детерминированный псевдослучайный (стабильные демо-данные) */
+function lcg(seed){ return ()=>{ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; }; }
+const rnd = lcg(20260118);
+
+function isoDate(d){ const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+
+/* Генерация демо-продаж по дням с 01.01.2026 по сегодня */
+function buildDemo(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = new Date(2026,0,1);
+  const daily=[];
+  const stockByArticle={};
+  // базовые остатки на складах
+  DEMO_GOODS.forEach(g=> stockByArticle[g.article]= 40+Math.floor(rnd()*160));
+  for(let d=new Date(start); d<=today; d=addDays(d,1)){
+    const dow=d.getDay(); const isWeekend=(dow===0||dow===6);
+    const dayOfMonth=d.getDate();
+    const month=d.getMonth();
+    // лёгкая сезонность: январь-февраль ниже, май-август выше
+    const season=[0.8,0.85,0.95,1.0,1.15,1.25,1.3,1.25,1.1,1.0,0.95,0.9][month]||1;
+    const lines=[];
+    DEMO_GOODS.forEach((g,i)=>{
+      let qty = g.vol*season*(isWeekend?0.7:1.0)* (0.6+rnd()*0.8);
+      qty = Math.max(0, Math.round(qty));
+      if(qty===0) return;
+      const revenue = qty*g.price*(0.9+rnd()*0.1);     // с учетом скидок
+      const commission = revenue*0.17;                 // ~17% комиссия WB
+      const returns = qty>0 && rnd()<0.08 ? 1 : 0;      // ~8% дней — 1 возврат
+      const adSpend = revenue*(0.04+rnd()*0.06)* (g.vol<0.7?1.6:1); // слабые товары — больше рекламы
+      const orders = qty;
+      lines.push({article:g.article, qty, revenue, commission, returns, adSpend, orders, stock:0});
+    });
+    daily.push({date:isoDate(d), lines});
+  }
+  // нарастающее уменьшение остатков
+  daily.forEach(day=> day.lines.forEach(l=>{ stockByArticle[l.article]=Math.max(0,(stockByArticle[l.article]||0)-l.qty); }));
+  // периодические «подвозы»
+  DEMO_GOODS.forEach(g=>{ stockByArticle[g.article]+= Math.floor(rnd()*60)+10; });
+  return {goods:DEMO_GOODS.map(g=>({...g})), daily, stockByArticle};
+}
+
+/* ---------- Периоды ---------- */
+function periodRange(period, anchor){
+  if(period==='custom'){
+    let f=new Date(state.customFrom||new Date()), t=new Date(state.customTo||new Date());
+    f.setHours(0,0,0,0); t.setHours(0,0,0,0);
+    t=addDays(t,1); // дата «до» — включительно
+    if(t<=f) t=addDays(f,1);
+    return {from:f,to:t};
+  }
+  const a=new Date(anchor); a.setHours(0,0,0,0);
+  let from,to;
+  if(period==='day'){ from=a; to=addDays(a,1); }
+  else if(period==='week'){ const day=(a.getDay()+6)%7; from=addDays(a,-day); to=addDays(from,7); }
+  else if(period==='month'){ from=new Date(a.getFullYear(),a.getMonth(),1); to=new Date(a.getFullYear(),a.getMonth()+1,1); }
+  else { from=new Date(a.getFullYear(),0,1); to=new Date(a.getFullYear()+0,11,31); to=addDays(to,1); if(to>new Date()) to=new Date(); }
+  return {from,to};
+}
+function prevRange(period, anchor){
+  if(period==='custom'){
+    const {from,to}=periodRange('custom',anchor);
+    const len=Math.round((to-from)/86400000); // дней в диапазоне
+    const pf=addDays(from,-len), pt=from;
+    return {from:pf,to:pt};
+  }
+  const a=new Date(anchor);
+  if(period==='day') return periodRange('day', addDays(a,-1));
+  if(period==='week') return periodRange('week', addDays(a,-7));
+  if(period==='month') return periodRange('month', new Date(a.getFullYear(),a.getMonth()-1,1));
+  return periodRange('year', new Date(a.getFullYear()-1,0,1));
+}
+/* Группировка внутри периода */
+function groupStep(period){
+  // возвращает функцию даты->метка группы
+  if(period==='day') return d=>d;             // одна группа (по часам не генерим)
+  if(period==='week'||period==='month') return d=>d; // по дням
+  return d=>d.slice(0,7); // по месяцам для года
+}
+function buckets(period, from, to){
+  // массив {label, from, to}
+  const out=[];
+  if(period==='day'){ out.push({label:from, from, to}); return out; }
+  if(period==='custom'){
+    const days=Math.round((new Date(to)-new Date(from))/86400000);
+    if(days<=60){
+      for(let d=new Date(from); d<new Date(to); d=addDays(d,1)){
+        out.push({label:isoDate(d).slice(5), from:isoDate(d), to:isoDate(addDays(d,1))});
+      }
+    } else {
+      // по месяцам
+      for(let m=new Date(from); m<new Date(to);){
+        const f=new Date(m); const t=new Date(f.getFullYear(),f.getMonth()+1,1);
+        const lab=['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'][f.getMonth()]+' '+String(f.getFullYear()).slice(2);
+        out.push({label:lab, from:isoDate(f), to:isoDate(t)});
+        m=t;
+      }
+    }
+    return out;
+  }
+  if(period==='year'){
+    for(let m=0;m<12;m++){
+      const f=new Date(from.getFullYear(),m,1);
+      if(f>=to) break;
+      const t=new Date(from.getFullYear(),m+1,1);
+      out.push({label:['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'][m], from:isoDate(f), to:isoDate(t)});
+    }
+    return out;
+  }
+  // week/month -> по дням
+  for(let d=new Date(from); d<to; d=addDays(d,1)){
+    out.push({label:isoDate(d).slice(5), from:isoDate(d), to:isoDate(addDays(d,1))});
+  }
+  return out;
+}
+
+/* ---------- Агрегация ---------- */
+function aggPeriod(from, to){
+  // суммирует daily-строки в [from,to)
+  const byArt={};
+  // фильтр по типу: если выбран конкретный тип — берём только его товары
+  const typeOk = art => state.typeFilter==='all' || artType(art)===state.typeFilter;
+  state.goods.forEach(g=>{ if(!typeOk(g.article)) return; byArt[g.article]={article:g.article,name:g.name,price:g.price,qty:0,revenue:0,commission:0,returns:0,adSpend:0,orders:0,stock:0}; });
+  state.daily.forEach(day=>{
+    if(day.date<isoDate(from)||day.date>=isoDate(to)) return;
+    day.lines.forEach(l=>{
+      const b=byArt[l.article]; if(!b) return;
+      b.qty+=l.qty; b.revenue+=l.revenue; b.commission+=l.commission;
+      b.returns+=l.returns; b.adSpend+=l.adSpend; b.orders+=l.orders;
+    });
+  });
+  // остатки — текущий срез (не за период)
+  Object.keys(byArt).forEach(a=> byArt[a].stock = state.stockByArticle[a]||0);
+  return Object.values(byArt);
+}
+function totals(rows){
+  const t={revenue:0,commission:0,returns:0,adSpend:0,orders:0,qty:0,profit:0,stock:0};
+  rows.forEach(r=>{
+    // себестоимость: из введённых значений, иначе демо-значение
+    const cost = state.costs[r.article]!=null ? state.costs[r.article] : findDemoCost(r.article);
+    const cogs = cost*r.qty;
+    // прибыль = выручка − комиссия WB − реклама − себестоимость
+    // (возвраты вычитаются из выручки на этапе сбора данных, здесь — отдельная плита)
+    r.profit = r.revenue - r.commission - r.adSpend - cogs;
+    t.revenue+=r.revenue; t.commission+=r.commission; t.returns+=r.returns;
+    t.adSpend+=r.adSpend; t.orders+=r.orders; t.qty+=r.qty; t.profit+=r.profit; t.stock+=r.stock;
+  });
+  t.roi = t.adSpend>0 ? (t.revenue/t.adSpend) : null;
+  t.margin = t.revenue>0 ? (t.profit/t.revenue) : null;
+  return t;
+}
+function findDemoCost(article){ const g=DEMO_GOODS.find(x=>x.article===article); return g?g.cost:0; }
+
+/* ---------- KPI ---------- */
+function renderKPI(){
+  const {from,to}=periodRange(state.period, state.anchor);
+  const rows=aggPeriod(from,to); const t=totals(rows);
+  const p=prevRange(state.period,state.anchor);
+  const prevRows=aggPeriod(p.from,p.to); const pt=totals(prevRows);
+  const dlt=(cur,prev)=> prev>0 ? (cur-prev)/prev : null;
+  const dltN=(cur,prev)=> prev!==0 ? (cur-prev)/Math.abs(prev) : null;
+  const delta=(cur,prev)=>{
+    const d=dltN(cur,prev);
+    if(d==null) return `<span class="delta flat">—</span>`;
+    const cls=d>0.001?'up':d<-0.001?'down':'flat';
+    const sym=d>0.001?'▲':d<-0.001?'▼':'◆';
+    return `<span class="delta ${cls}">${sym} ${Math.abs(d*100).toFixed(0)}%</span> к прошлому периоду`;
+  };
+  const tiles=[
+    {lab:'Выручка', val:fmtR(t.revenue), sub:delta(t.revenue,pt.revenue)},
+    {lab:'Заказы', val:fmtN(t.orders), sub:delta(t.orders,pt.orders)},
+    {lab:'Прибыль', val:`<span class="${t.profit>=0?'profit-pos':'profit-neg'}">${fmtR(t.profit)}</span>`, sub:delta(t.profit,pt.profit)},
+    {lab:'ROI рекламы', val:t.roi!=null?t.roi.toFixed(2)+'×':'—', sub:t.adSpend>0?`на ${fmtR(t.adSpend)} расходов`:'расходов нет', cls:t.roi!=null&&t.roi<1?'profit-neg':''},
+    {lab:'Остатки', val:fmtN(t.stock)+' шт', sub:'сумма по всем складам WB'},
+    {lab:'Возвраты', val:fmtN(t.returns)+' шт', sub:(t.returns+t.orders)>0?`доля ${fmtPct(t.returns/(t.returns+t.orders))} заказов`:'за период'},
+  ];
+  $('#kpi').innerHTML = tiles.map(t=>`<div class="tile"><div class="lab">${t.lab}</div><div class="val ${t.cls||''}">${t.val}</div><div class="sub">${t.sub}</div></div>`).join('');
+  return {rows,t};
+}
+
+/* ---------- Выводы (авто-выжимка по периоду) ---------- */
+function renderInsights(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to); const t=totals(rows);
+  const p=prevRange(state.period,state.anchor); const pt=totals(aggPeriod(p.from,p.to));
+  const items=[];
+  const dlt=(cur,prev)=> prev>0 ? (cur-prev)/prev : null;
+
+  // Общая прибыль за период
+  if(t.revenue>0 || t.orders>0){
+    if(t.profit>=0) items.push({cls:'good',html:`Период в плюсе: <b>${fmtR(t.profit)}</b> чистой прибыли`});
+    else items.push({cls:'bad',html:`Период в убытке: <b>${fmtR(t.profit)}</b>. Выручка не покрывает комиссию, рекламу и себестоимость`});
+  }
+
+  // Динамика выручки к прошлому периоду
+  const d=dlt(t.revenue,pt.revenue);
+  if(d!=null){
+    const cls=d>0.001?'good':d<-0.001?'bad':'info';
+    const word=d>0.001?'рост':d<-0.001?'падение':'без изменений';
+    items.push({cls,html:`Выручка к прошлому периоду: <b>${word} ${Math.abs(d*100).toFixed(0)}%</b> (${fmtR(pt.revenue)} → ${fmtR(t.revenue)})`});
+  }
+
+  // Реклама
+  if(t.adSpend>0 && t.roi!=null){
+    const roi=t.roi;
+    if(roi<1) items.push({cls:'bad',html:`Реклама в минусе: ROI <b>${roi.toFixed(2)}×</b> — на ${fmtR(t.adSpend)} расходов возвращается ${fmtR(t.revenue)}. Пересмотри ставки или отключи слабые кампании`});
+    else if(roi<1.5) items.push({cls:'warn',html:`Реклама окупается слабо: ROI <b>${roi.toFixed(2)}×</b>. Норма — от 1.5×`});
+    else items.push({cls:'good',html:`Реклама окупается: ROI <b>${roi.toFixed(2)}×</b> (расход ${fmtR(t.adSpend)} → выручка ${fmtR(t.revenue)})`});
+  } else if(t.revenue>0 || t.orders>0){
+    items.push({cls:'info',html:'Расходов на рекламу за период нет'});
+  }
+
+  // Лучший товар
+  const byProfit=[...rows].filter(r=>r.qty>0).sort((a,b)=>b.profit-a.profit);
+  if(byProfit.length){
+    const top=byProfit[0];
+    items.push({cls:top.profit>=0?'good':'info',html:`Лучший товар: <b>${top.name}</b> — прибыль ${fmtR(top.profit)}`});
+  }
+
+  // Убыточные товары
+  const loss=byProfit.filter(r=>r.profit<0);
+  if(loss.length){
+    const names=loss.slice(0,3).map(r=>`${r.name} (${fmtR(r.profit)})`).join(', ');
+    items.push({cls:'bad',html:`В минусе: <b>${names}</b>${loss.length>3?` и ещё ${loss.length-3}`:''}. Снизь рекламу или пересмотри цену`});
+  }
+
+  // Слабый ROI рекламы по товару (мягкий негатив — между «хорошо» и «плохо»)
+  const byRoi=rows.filter(r=>r.adSpend>0 && r.qty>0).map(r=>({name:r.name,roi:r.revenue/r.adSpend,ad:r.adSpend})).sort((a,b)=>a.roi-b.roi);
+  if(byRoi.length && byRoi[0].roi<1.5){
+    const w=byRoi[0];
+    items.push({cls:'warn',html:`Слабый ROI рекламы: <b>${w.name}</b> — ${w.roi.toFixed(2)}× на ${fmtR(w.adSpend)} расходов. Пересмотри ставки по этому товару`});
+  }
+
+  // Возвраты
+  const retShare=(t.returns+t.orders)>0 ? t.returns/(t.returns+t.orders) : 0;
+  if(t.returns>0){
+    if(retShare>0.10) items.push({cls:'warn',html:`Высокая доля возвратов: <b>${(retShare*100).toFixed(0)}%</b> (${fmtN(t.returns)} шт). Проверь качество и описание карточек`});
+    else items.push({cls:'info',html:`Возвраты <b>${(retShare*100).toFixed(0)}%</b> (${fmtN(t.returns)} шт) — в пределах нормы`});
+  } else if(t.revenue>0 || t.orders>0){
+    items.push({cls:'info',html:'Возвратов за период нет'});
+  }
+
+  // Заканчивающиеся остатки
+  const low=rows.filter(r=>r.stock>0 && r.stock<20).sort((a,b)=>a.stock-b.stock);
+  if(low.length){
+    const names=low.slice(0,4).map(r=>`${r.name} (${fmtN(r.stock)} шт)`).join(', ');
+    items.push({cls:'warn',html:`Заканчиваются: <b>${names}</b>${low.length>4?` и ещё ${low.length-4}`:''}. Пора пополнить склад`});
+  }
+
+  $('#insightsList').innerHTML = items.map(it=>`<li class="${it.cls}">${it.html}</li>`).join('');
+}
+
+/* ---------- Графики: общие утилиты SVG ---------- */
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs={},text){
+  const e=document.createElementNS(NS,tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  if(text!=null) e.textContent=text;
+  return e;
+}
+function niceMax(v){ const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1)))); const n=v/p; const m=n<1.5?1.5:n<3?3:n<7?7:10; return m*p; }
+function chartFrame(svg, h, dataMax, yFmt){
+  const W=svg.parentElement.clientWidth-2, H=svg.getAttribute('height')|0;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+  // На очень узких экранах (<=480) сжимаем шрифт подписей оси Y, а не сам отступ
+  const pad={l:46,r:12,t:10,b:24};
+  const pw=W-pad.l-pad.r, ph=H-pad.t-pad.b;
+  const max=niceMax(dataMax);
+  return {W,H,pad,pw,ph,max};
+}
+// tooltip
+const tt=$('#tt');
+function showTip(html,x,y){ tt.innerHTML=html; tt.style.opacity=1; const r=tt.getBoundingClientRect(); tt.style.left=Math.min(x+12,innerWidth-r.width-8)+'px'; tt.style.top=Math.max(8,y-r.height-8)+'px'; }
+function hideTip(){ tt.style.opacity=0; }
+
+/* Линейный/площадной + столбцы */
+function renderDyn(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const bs=buckets(state.period,from,to);
+  const series=bs.map(b=>{ const rows=aggPeriod(new Date(b.from),new Date(b.to)); const t=totals(rows); return {label:b.label, v:state.metric==='revenue'?t.revenue:state.metric==='orders'?t.orders:t.profit}; });
+  const svg=$('#dynChart'); const f=chartFrame(svg,220,Math.max(...series.map(s=>Math.abs(s.v)),1));
+  // grid
+  const steps=4;
+  for(let i=0;i<=steps;i++){
+    const v=f.max*i/steps; const y=f.pad.t+f.ph-f.ph*i/steps;
+    svg.appendChild(el('line',{class:'grid-line',x1:f.pad.l,x2:f.pad.l+f.pw,y1:y,y2:y}));
+    svg.appendChild(el('text',{class:'axis-text',x:f.pad.l-6,y:y+3,'text-anchor':'end'},fmt(v)));
+  }
+  const bw=f.pw/series.length;
+  // столбцы
+  const col=state.metric==='profit'?'--series-1':'--series-1';
+  const negCol='var(--crit)';
+  series.forEach((s,i)=>{
+    const x=f.pad.l+bw*i+bw*0.18, w=bw*0.64;
+    const h=f.ph*Math.abs(s.v)/f.max;
+    const y=f.pad.t+f.ph-h;
+    const bar=el('rect',{x,y:Math.min(y,f.pad.t+f.ph),width:w,height:Math.max(0,h),rx:3,fill:`var(${s.v<0?'--crit':'--series-1'})`});
+    svg.appendChild(bar);
+    // hit
+    const hit=el('rect',{x:f.pad.l+bw*i,y:0,width:bw,height:f.H,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(`<b>${s.label}</b><br>${state.metric==='revenue'?'Выручка':state.metric==='orders'?'Заказы':'Прибыль'}: ${state.metric==='orders'?fmtN(s.v):fmtR(s.v)}`,e.clientX,e.clientY));
+    hit.addEventListener('mouseleave',hideTip);
+    svg.appendChild(hit);
+  });
+  // baseline
+  svg.appendChild(el('line',{class:'baseline',x1:f.pad.l,x2:f.pad.l+f.pw,y1:f.pad.t+f.ph,y2:f.pad.t+f.ph}));
+  // x labels — кратные
+  const labStep=Math.ceil(series.length/8);
+  series.forEach((s,i)=>{ if(i%labStep===0||i===series.length-1){
+    svg.appendChild(el('text',{class:'axis-text',x:f.pad.l+bw*i+bw/2,y:f.H-f.pad.b+14,'text-anchor':'middle'},s.label));
+  }});
+  const desc={revenue:'Выручка по периоду (₽)',orders:'Заказы по периоду (шт)',profit:'Прибыль по периоду (₽, выручка − комиссия − реклама − себестоимость)'}[state.metric];
+  $('#dynDesc').textContent=desc;
+}
+
+/* Реклама: расходы + заказы (две панели в одной карточке, но НЕ dual-axis — отдельные мини-чарты) */
+function renderAds(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const bs=buckets(state.period,from,to);
+  const series=bs.map(b=>{ const rows=aggPeriod(new Date(b.from),new Date(b.to)); const t=totals(rows); return {label:b.label, ad:t.adSpend, orders:t.orders}; });
+  const svg=$('#adsChart'); const f=chartFrame(svg,220,Math.max(...series.map(s=>s.ad),1));
+  const steps=4;
+  for(let i=0;i<=steps;i++){ const v=f.max*i/steps; const y=f.pad.t+f.ph-f.ph*i/steps;
+    svg.appendChild(el('line',{class:'grid-line',x1:f.pad.l,x2:f.pad.l+f.pw,y1:y,y2:y}));
+    svg.appendChild(el('text',{class:'axis-text',x:f.pad.l-6,y:y+3,'text-anchor':'end'},fmt(v))); }
+  const bw=f.pw/series.length;
+  series.forEach((s,i)=>{
+    const x=f.pad.l+bw*i+bw*0.18, w=bw*0.64;
+    const h=f.ph*Math.max(0,s.ad)/f.max; const y=f.pad.t+f.ph-h;
+    svg.appendChild(el('rect',{x,y,width:w,height:h,rx:3,fill:'var(--series-2)'}));
+    const hit=el('rect',{x:f.pad.l+bw*i,y:0,width:bw,height:f.H,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(`<b>${s.label}</b><br>Расходы: ${fmtR(s.ad)}<br>Заказы: ${fmtN(s.orders)}`,e.clientX,e.clientY));
+    hit.addEventListener('mouseleave',hideTip);
+    svg.appendChild(hit);
+  });
+  svg.appendChild(el('line',{class:'baseline',x1:f.pad.l,x2:f.pad.l+f.pw,y1:f.pad.t+f.ph,y2:f.pad.t+f.ph}));
+  const labStep=Math.ceil(series.length/8);
+  series.forEach((s,i)=>{ if(i%labStep===0||i===series.length-1)
+    svg.appendChild(el('text',{class:'axis-text',x:f.pad.l+bw*i+bw/2,y:f.H-f.pad.b+14,'text-anchor':'middle'},s.label)); });
+  // добавим легенду над графиком один раз
+  const card=svg.closest('.card');
+  if(!card.querySelector('.adsLegend')){
+    const d=document.createElement('div'); d.className='legend adsLegend';
+    d.innerHTML='<span><i style="background:var(--series-2)"></i>Расходы на рекламу</span><span>числа над столбцами — заказы</span>';
+    svg.parentElement.insertBefore(d,svg);
+  }
+}
+
+/* Горизонтальные бары: прибыль по товарам */
+function renderProfit(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to); const t=totals(rows);
+  rows.sort((a,b)=>b.profit-a.profit);
+  const svg=$('#profitChart'); const H=28*rows.length+24;
+  svg.setAttribute('height',H);
+  const W=svg.parentElement.clientWidth-2; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML='';
+  const labW=Math.min(160,W*0.34);
+  const valW=78; const pw=W-labW-valW-16; const max=Math.max(...rows.map(r=>Math.abs(r.profit)),1);
+  const niceM=niceMax(max);
+  rows.forEach((r,i)=>{
+    const y=12+i*28;
+    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},r.name.length>26?r.name.slice(0,24)+'…':r.name));
+    const w=pw*Math.abs(r.profit)/niceM;
+    const x=labW;
+    svg.appendChild(el('rect',{x,y:6+y,width:Math.max(1,w),height:16,rx:3,fill:r.profit>=0?'var(--series-1)':'var(--crit)'}));
+    svg.appendChild(el('text',{class:'axis-text',x:labW+pw+6,y:y+13,'text-anchor':'start',fill:r.profit>=0?'var(--good-ink)':'var(--crit)'},fmtR(r.profit)));
+    const hit=el('rect',{x:0,y,width:W,height:24,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(`<b>${r.name}</b><br>Артикул: ${r.article}<br>Прибыль: ${fmtR(r.profit)}<br>Выручка: ${fmtR(r.revenue)}`,e.clientX,e.clientY));
+    hit.addEventListener('mouseleave',hideTip);
+    svg.appendChild(hit);
+  });
+}
+
+/* Остатки по товарам (горизонтальные бары) */
+function renderStock(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to);
+  rows.sort((a,b)=>b.stock-a.stock);
+  const svg=$('#stockChart'); const H=28*rows.length+24;
+  svg.setAttribute('height',H); const W=svg.parentElement.clientWidth-2;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
+  const labW=Math.min(160,W*0.34); const valW=54; const pw=W-labW-valW-16;
+  const max=Math.max(...rows.map(r=>r.stock),1);
+  rows.forEach((r,i)=>{
+    const y=12+i*28;
+    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},r.name.length>26?r.name.slice(0,24)+'…':r.name));
+    const w=pw*r.stock/max;
+    const low=r.stock<20;
+    svg.appendChild(el('rect',{x:labW,y:6+y,width:Math.max(1,w),height:16,rx:3,fill:low?'var(--crit)':'var(--series-3)'}));
+    svg.appendChild(el('text',{class:'axis-text',x:labW+pw+6,y:y+13,'text-anchor':'start',fill:low?'var(--crit)':'var(--ink-1)'},fmtN(r.stock)));
+    const hit=el('rect',{x:0,y,width:W,height:24,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(`<b>${r.name}</b><br>Остаток: ${fmtN(r.stock)} шт<br>(все склады WB)`,e.clientX,e.clientY));
+    hit.addEventListener('mouseleave',hideTip); svg.appendChild(hit);
+  });
+}
+
+/* Круговой график: структура выручки по типам товаров */
+const PIE_COLORS=['--series-1','--series-2','--series-3','--series-4','--series-5','--series-6','--series-7','--series-8'];
+function renderPie(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to);
+  const byType={};
+  rows.forEach(r=>{ if(r.revenue<=0) return; const t=artType(r.article)||'Без типа'; byType[t]=(byType[t]||0)+r.revenue; });
+  const entries=Object.entries(byType).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,e)=>s+e[1],0);
+  const svg=$('#pieChart'); svg.innerHTML='';
+  if(total<=0){
+    svg.innerHTML='<text class="pie-center-sub" x="90" y="92">нет данных за период</text>';
+    $('#pieLegend').innerHTML='';
+    return;
+  }
+  const cx=90,cy=90,r=64,sw=26,C=2*Math.PI*r;
+  const g=el('g',{transform:`rotate(-90 ${cx} ${cy})`});
+  let acc=0;
+  entries.forEach((e,i)=>{
+    const frac=e[1]/total; const dash=frac*C;
+    const seg=el('circle',{cx,cy,r,fill:'none',stroke:`var(${PIE_COLORS[i%PIE_COLORS.length]})`,'stroke-width':sw,'stroke-dasharray':`${dash} ${C-dash}`,'stroke-dashoffset':-acc});
+    seg.addEventListener('mousemove',ev=>showTip(`<b>${e[0]}</b><br>${fmtR(e[1])} · ${(frac*100).toFixed(0)}% выручки`,ev.clientX,ev.clientY));
+    seg.addEventListener('mouseleave',hideTip);
+    g.appendChild(seg); acc+=dash;
+  });
+  svg.appendChild(g);
+  // центральная подпись (поверх, не повёрнута)
+  // центр donut: только «выручки» маленькой подписью, без дубля крупной цифры (она уже есть в KPI сверху)
+  svg.appendChild(el('text',{class:'pie-center-sub',x:cx,y:cy-4},'выручка'));
+  svg.appendChild(el('text',{class:'pie-center',x:cx,y:cy+14,fill:'var(--ink-2)',fontWeight:'600'},fmtN(entries.length)+' групп'));
+  // легенда
+  $('#pieLegend').innerHTML=entries.map((e,i)=>`<li><i style="background:var(${PIE_COLORS[i%PIE_COLORS.length]})"></i>${e[0]}<span class="pc">${(e[1]/total*100).toFixed(0)}%</span></li>`).join('');
+}
+
+/* ---------- Таблица товаров ---------- */
+function renderTable(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to).sort((a,b)=>b.revenue-a.revenue);
+  const head=['Товар','Продано','Выручка','Комиссия WB','Реклама','Себест./шт','Себест. всего','Прибыль','ROI','Остатки'];
+  // Классы скрытия колонок на узких экранах: 920 → комиссия/реклама/себест.всего/ROI, 560 → ещё и себест./шт
+  const colCls=['','num','num','num tbl-hide-920','num tbl-hide-920','num tbl-hide-560','num tbl-hide-920','num','num tbl-hide-920','num'];
+  $('#goodsHead').innerHTML='<tr>'+head.map((h,i)=>`<th class="${colCls[i]}">${h}</th>`).join('')+'</tr>';
+  const body=rows.map(r=>{
+    const cost=state.costs[r.article]!=null?state.costs[r.article]:findDemoCost(r.article);
+    const cogs=cost*r.qty;
+    const profit=r.revenue-r.commission-r.adSpend-cogs;
+    const roi=r.adSpend>0?(r.revenue/r.adSpend):null;
+    const roiCls=roi==null?'':roi<10?'bad':roi<13?'warn':'good';
+    const low=r.stock<20;
+    return `<tr>
+      <td><b>${r.article}</b> <span class="muted">${r.name}</span></td>
+      <td class="num">${fmtN(r.qty)}</td>
+      <td class="num">${fmtR(r.revenue)}</td>
+      <td class="num tbl-hide-920">${fmtR(r.commission)}</td>
+      <td class="num tbl-hide-920">${fmtR(r.adSpend)}</td>
+      <td class="num tbl-hide-560"><input class="cost" data-art="${r.article}" value="${cost>0?Math.round(cost):''}" placeholder="0"></td>
+      <td class="num tbl-hide-920">${fmtR(cogs)}</td>
+      <td class="num ${profit>=0?'profit-pos':'profit-neg'}">${fmtR(profit)}</td>
+      <td class="num tbl-hide-920">${roi!=null?`<span class="roi-pill ${roiCls}">${roi.toFixed(2)}×</span>`:'—'}</td>
+      <td class="num ${low?'stock-low':''}">${fmtN(r.stock)}</td>
+    </tr>`;
+  }).join('');
+  $('#goodsBody').innerHTML=body||'<tr><td colspan="10" class="empty">Нет данных за период</td></tr>';
+  // обработчики ввода себестоимости
+  $('#goodsBody').querySelectorAll('input.cost').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const art=inp.dataset.art; const v=parseFloat(inp.value.replace(',','.'));
+      if(isNaN(v)||v<=0){ delete state.costs[art]; }
+      else state.costs[art]=v;
+      localStorage.setItem('wb_costs',JSON.stringify(state.costs));
+      toast('Себестоимость сохранена');
+      renderAll();
+    });
+  });
+}
+
+/* ---------- Рендер всего ---------- */
+function renderAll(){
+  renderKPI(); renderInsights(); renderPie(); renderDyn(); renderAds(); renderProfit(); renderStock(); renderTable();
+  const {from,to}=periodRange(state.period,state.anchor);
+  $('#rangeLabel').textContent=`${isoDate(from)} → ${isoDate(addDays(to,-1))}`;
+  $('#modeTag').textContent = state.source==='demo'?'демо-данные':state.source==='api'?'данные из API':'данные из CSV';
+  $('#lastSync').textContent = state.lastSync? `обновлено ${state.lastSync}`:'';
+  syncTypeSelect();
+}
+
+/* ---------- API Wildberries ---------- */
+const HOSTS={
+  stats:'stats',
+  advert:'advert',
+  content:'content',
+  marketplace:'marketplace'
+};
+// Все запросы к WB API идут через локальный serve.py (/api/wb/proxy),
+// чтобы обойти CORS и не светить токен в браузере.
+async function wbGet(host,path,query){
+  let url='/api/wb/proxy?host='+encodeURIComponent(HOSTS[host])+'&path='+encodeURIComponent(path);
+  if(query){
+    const qs=new URLSearchParams(query).toString();
+    if(qs) url+='&'+qs;
+  }
+  const r=await fetch(url);
+  if(!r.ok){ const t=await r.text(); throw new Error(`${r.status} ${path}: ${t.slice(0,160)}`); }
+  return r.json();
+}
+async function wbPost(host,path,body){
+  const url='/api/wb/proxy?host='+encodeURIComponent(HOSTS[host])+'&path='+encodeURIComponent(path);
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){ const t=await r.text(); throw new Error(`${r.status} ${path}: ${t.slice(0,160)}`); }
+  return r.json();
+}
+
+/* === Incremental sync ===
+   Универсальный алгоритм инкрементальной подгрузки данных с локальным кэшем.
+   Применим к любым эндпоинтам с историей (продажи, заказы, реклама).
+   Принцип:
+   1. **Первая загрузка** — с даты, заданной клиентом (initialDate из настроек).
+   2. **Дальнейшие** — от последней даты в кэше + 1 день.
+   3. Режем окно на куски ≤chunkDays (WB: 31 день для advert, 90 дней для stats).
+   4. Пауза между запросами rateMs (WB advert: 22с, stats: 5с).
+   5. Мерджим новые данные в кэш, сохраняем обратно в LocalStorage.
+   Параметры:
+     opts.host, opts.path, opts.method = 'GET' | 'POST'
+     opts.queryFn(from,to) → объект query-параметров
+     opts.bodyFn(from,to)  → объект body для POST
+     opts.parse(rows)      → массив строк {date, ...data}
+     opts.cacheKey         → ключ в localStorage
+     opts.dateKey          → поле даты в строке ('lastChangeDate', 'date', ...)
+     opts.chunkDays        → размер окна (по умолчанию 30)
+     opts.rateMs           → пауза между запросами (по умолчанию 5000)
+     opts.maxChunks        → макс. число чанков за один запуск (default 50)
+     opts.initialDate      → дата первой загрузки (YYYY-MM-DD), если кэш пуст
+     opts.onProgress(i,total) → опциональный колбэк
+*/
+async function incrementalFetch(opts){
+  const {
+    host, path, method='GET',
+    queryFn=null, bodyFn=null,
+    parse=null,
+    cacheKey, dateKey='date',
+    chunkDays=30, rateMs=5000, maxChunks=50,
+    initialDate=null,
+    onProgress=null,
+  } = opts;
+  // читаем кэш
+  const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+  // последняя дата в кэше
+  const dates = Object.keys(cache).filter(k => /^\d{4}-\d{2}-\d{2}/.test(k)).sort();
+  let fromDate = null;
+  if(dates.length){
+    // есть кэш — берём последнюю дату + 1 день
+    const d = new Date(dates[dates.length-1]); d.setDate(d.getDate()+1);
+    fromDate = isoDate(d);
+  } else if(initialDate){
+    // кэш пуст — стартуем с initialDate (задаётся клиентом в настройках)
+    fromDate = initialDate;
+  }
+  const today = isoDate(new Date());
+  if(!fromDate || fromDate > today) return cache; // нечего тянуть
+
+  const fromMs = new Date(fromDate).getTime();
+  const toMs = new Date(today).getTime();
+  const chunkMs = chunkDays * 24 * 60 * 60 * 1000;
+  let cursor = fromMs;
+  let chunks = 0, total = Math.ceil((toMs - fromMs) / chunkMs);
+  while(cursor <= toMs && chunks < maxChunks){
+    const end = Math.min(cursor + chunkMs, toMs);
+    const b = isoDate(new Date(cursor));
+    const e = isoDate(new Date(end));
+    try{
+      let rows;
+      if(method === 'POST'){
+        const body = bodyFn ? bodyFn(b,e) : {};
+        rows = await wbPost(host, path, body);
+      } else {
+        const query = queryFn ? queryFn(b,e) : {};
+        rows = await wbGet(host, path, query);
+      }
+      const arr = Array.isArray(rows) ? rows : (rows?.rows || rows?.result || []);
+      const parsed = parse ? parse(arr) : arr;
+      parsed.forEach(row => {
+        const d = (row[dateKey] || '').slice(0,10);
+        if(!d) return;
+        cache[d] = row; // перезаписываем свежим
+      });
+    }catch(err){
+      console.warn(`inc[${cacheKey}] chunk ${b}..${e}:`, err.message);
+      break; // стоп, не блокируем остальное
+    }
+    chunks++;
+    if(onProgress) onProgress(chunks, total);
+    if(end < toMs) await new Promise(r => setTimeout(r, rateMs));
+    cursor = end + 24*60*60*1000;
+  }
+  localStorage.setItem(cacheKey, JSON.stringify(cache));
+  return cache;
+}
+
+async function loadFromAPI(){
+  if(!state.token) throw new Error('Нет API-токена. Открой «Настройки» и вставь токен.');
+  const y=new Date().getFullYear();
+  const dateFrom=isoDate(new Date(y,0,1));
+  // 1) Товары (карточки) — названия + артикулы
+  let goods=[];
+  try{
+    const cards=await wbPost('content','/content/v2/get/cards/list',{filter:{allowed:true,limit:300}});
+    const items=cards?.cards||cards?.result?.cards||[];
+    goods=items.map(c=>({nmId:c.nmID, article:String(c.vendorCode||c.vendorCodes||''), name:c.title||c.characteristics?.find(x=>x.name=='Наименование')?.value||('Арт. '+(c.vendorCode||c.nmID)), price:c.priceU?c.priceU/100:0, cost:0}));
+  }catch(e){ console.warn('cards:',e.message); }
+  if(!goods.length) throw new Error('Не удалось получить список товаров. Проверь токен и права на «контент».');
+
+  // 2) Продажи и возвраты — incremental (по дням, кэш wb_sales_cache)
+  //    WB требует dateFrom обязательно — передаём «последняя дата в кэше + 1 день»
+  //    WB сам отдаёт всё ≥dateFrom, фильтрация на нашей стороне по dateKey.
+  const initialDate = getInitialDate();
+  const salesCache = await incrementalFetch({
+    host:'stats', path:'/api/v1/supplier/sales',
+    queryFn: (b) => ({ dateFrom: b, flag:0 }),
+    parse: rows => rows.map(r => ({ ...r, _date: (r.lastChangeDate||r.date||'').slice(0,10) })),
+    cacheKey: 'wb_sales_cache', dateKey: '_date',
+    chunkDays: 90, rateMs: 2000,
+    initialDate,
+  }).catch(e => { console.warn('sales:', e.message); return {}; });
+  const srows = Object.values(salesCache).flatMap(d => d.rows || [d]);
+  // 3) Заказы — incremental (кэш wb_orders_cache)
+  let ordersRows = [];
+  try{
+    const ordersCache = await incrementalFetch({
+      host:'stats', path:'/api/v1/supplier/orders',
+      queryFn: (b) => ({ dateFrom: b, flag:0 }),
+      parse: rows => rows,
+      cacheKey: 'wb_orders_cache', dateKey: 'lastChangeDate',
+      chunkDays: 90, rateMs: 2000,
+      initialDate,
+    });
+    ordersRows = Object.values(ordersCache).flatMap(d => d.rows || [d]);
+  }catch(e){ console.warn('orders:', e.message); }
+
+  // 4) Остатки (текущий срез). WB сменил API: вместо /api/v1/supplier/stocks
+  // теперь надо сначала получить список складов, потом пройтись по каждому.
+  const stockByArticle={};
+  try{
+    const offices = await wbGet('marketplace','/api/v3/offices') || [];
+    const active = offices.filter(o => o.selected !== false).slice(0, 30);
+    for(const wh of active){
+      try{
+        const res = await wbPost('marketplace', `/api/v3/stocks/${wh.id}`, {}) || {};
+        (res.stocks || []).forEach(s => {
+          const art = String(s.supplierArticle || s.article || s.vendorCode || '');
+          const qty = s.quantity ?? s.balance ?? s.amount ?? 0;
+          if(!art) return;
+          stockByArticle[art] = (stockByArticle[art] || 0) + Number(qty);
+        });
+      }catch(e){ /* один склад пустой/ошибка — пропускаем, остальные нужны */ }
+    }
+  }catch(e){ console.warn('stocks:', e.message); }
+
+  // 5) Реклама — расходы по дням через incrementalFetch.
+  //    WB: /adv/v3/fullstats (GET), ≤31 день за запрос, требует ids кампаний.
+  let adByDate = {};
+  try{
+    // 5a) Список кампаний — отдельный кэш, обновляется раз в сутки
+    //    Реальный ответ WB: { adverts: [ { type, status, count, advert_list:[{advertId,...}] } ] }
+    let campaigns = JSON.parse(localStorage.getItem('wb_adv_campaigns') || '[]');
+    const lastCampTs = Number(localStorage.getItem('wb_adv_campaigns_ts') || 0);
+    if(!campaigns.length || (Date.now() - lastCampTs) > 24*60*60*1000){
+      try{
+        const fresh = await wbGet('advert','/adv/v1/promotion/count') || {};
+        // status: 7 = активная, 9 = на паузе, 11 = завершена. Тянем всё — даже
+        // завершённые могут иметь расходы в прошлом.
+        const all = (fresh.adverts || []).flatMap(g => (g.advert_list || []).map(x => x.advertId));
+        campaigns = [...new Set(all.map(Number).filter(Boolean))];
+        localStorage.setItem('wb_adv_campaigns', JSON.stringify(campaigns));
+        localStorage.setItem('wb_adv_campaigns_ts', String(Date.now()));
+      }catch(e){ console.warn('adv campaigns:', e.message); }
+    }
+    if(!campaigns.length) throw new Error('нет кампаний в WB');
+
+    // 5b) Инкрементальная подгрузка через общий алгоритм
+    //    У WB лимит ids≤50 за запрос, поэтому для каждого временного окна
+    //    пройдёмся по всем чанкам ids (по 50 штук).
+    //    Каждый чанк пишет в свой ключ кэша; потом мерджим в wb_adv_cache.
+    //    Идём от самых свежих кампаний к старым — быстрее получим актуальные.
+    const advCache = {};
+    const initialFrom = getInitialDate();
+    const sortedIds = [...campaigns].sort((a,b)=>b-a);
+    const idChunks = [];
+    for(let i=0;i<sortedIds.length;i+=50) idChunks.push(sortedIds.slice(i, i+50));
+    toast(`Реклама: ${idChunks.length} групп по 50 ids, тянем по 30 дней…`);
+    for(let ci=0; ci<idChunks.length; ci++){
+      const ids = idChunks[ci].join(',');
+      const chunkCacheKey = `wb_adv_chunk_${ci}`;
+      const chunkCache = await incrementalFetch({
+        host:'advert', path:'/adv/v3/fullstats', method:'GET',
+        queryFn: (b, e) => ({ ids, beginDate: b, endDate: e }),
+        parse: rows => {
+          const flat = [];
+          rows.forEach(c => {
+            (c.days || []).forEach(dd => {
+              flat.push({
+                date: (dd.date || '').slice(0,10),
+                sum: Number(dd.sum || dd.spent || 0),
+                advertId: c.advertId,
+                views: dd.views, clicks: dd.clicks,
+                atbs: dd.atbs, orders: dd.orders, cr: dd.cr,
+              });
+            });
+          });
+          return flat;
+        },
+        cacheKey: chunkCacheKey, dateKey: 'date',
+        chunkDays: 30, rateMs: 22000, // лимит WB advert: 3 req/min
+        initialDate: initialFrom,
+        onProgress: (i, totalWin) => {
+          if(i === 1) toast(`Реклама: группа ${ci+1}/${idChunks.length}, окно 1/${totalWin}…`);
+        },
+      });
+      // мерджим чанк в общий кэш
+      Object.values(chunkCache).forEach(d => {
+        if(!d || !d.date) return;
+        if(!advCache[d.date]) advCache[d.date] = { date:d.date, sum:0 };
+        advCache[d.date].sum += Number(d.sum || 0);
+      });
+      localStorage.setItem('wb_adv_cache', JSON.stringify(advCache));
+    }
+
+    // 5c) Сводим к простому {дата: сумма} для совместимости с основной логикой
+    adByDate = {};
+    Object.values(advCache).forEach(d => {
+      if(!d || !d.date) return;
+      adByDate[d.date] = (adByDate[d.date] || 0) + (d.sum || 0);
+    });
+    toast('Реклама: кэш обновлён', false, 1500);
+  }catch(e){
+    console.warn('adv:', e.message);
+    toast('Реклама: не обновлена ('+e.message.slice(0,80)+')', true);
+    adByDate = JSON.parse(localStorage.getItem('wb_adv_cache') || '{}');
+  }
+
+  // Сборка модели: агрегируем продажи по дням
+  const dailyMap={};
+  srows.forEach(s=>{
+    const d=(s.lastChangeDate||s.date||'').slice(0,10); if(!d) return;
+    const art=String(s.supplierArticle||s.article||'');
+    const isReturn=(s.saleID||'').startsWith('R')||s.isSupply===false;
+    if(!dailyMap[d]) dailyMap[d]={date:d,lines:{}};
+    const L=dailyMap[d].lines[art]||(dailyMap[d].lines[art]={article:art,qty:0,revenue:0,commission:0,returns:0,adSpend:0,orders:0,stock:0});
+    const totalPrice=s.totalPrice||0; const forPay=s.forPay||0;
+    if(isReturn){ L.returns+=1; L.revenue-=totalPrice; }
+    else{ L.qty+=1; L.orders+=1; L.revenue+=totalPrice; L.commission+=(totalPrice-forPay); }
+  });
+  // заказы — для полноты (если продажи пусты)
+  ordersRows.forEach(o=>{
+    const d=(o.lastChangeDate||o.date||'').slice(0,10); if(!d) return;
+    const art=String(o.supplierArticle||o.article||'');
+    if(!dailyMap[d]) dailyMap[d]={date:d,lines:{}};
+    const L=dailyMap[d].lines[art]||(dailyMap[d].lines[art]={article:art,qty:0,revenue:0,commission:0,returns:0,adSpend:0,orders:0,stock:0});
+  });
+  // реклама
+  Object.keys(adByDate).forEach(d=>{
+    if(!dailyMap[d]) dailyMap[d]={date:d,lines:{}};
+    const arts=Object.keys(dailyMap[d].lines);
+    if(arts.length){ const share=adByDate[d]/arts.length; arts.forEach(a=> dailyMap[d].lines[a].adSpend+=share); }
+  });
+
+  const daily=Object.values(dailyMap).map(day=>({date:day.date,lines:Object.values(day.lines)})).sort((a,b)=>a.date<b.date?-1:1);
+  state.goods=goods; state.daily=daily; state.stockByArticle=stockByArticle;
+  state.source='api'; state.lastSync=new Date().toLocaleString('ru-RU');
+  localStorage.setItem('wb_daily_cache',JSON.stringify(daily));
+  localStorage.setItem('wb_goods_cache',JSON.stringify(goods));
+}
+
+/* ---------- CSV импорт/экспорт ---------- */
+function parseCSV(text){
+  const rows=[]; let i=0,n=text.length,field='',row=[],q=false;
+  while(i<n){ const c=text[i];
+    if(q){ if(c==='"'&&text[i+1]==='"'){field+='"';i+=2;} else if(c==='"'){q=false;i++;} else {field+=c;i++;} }
+    else{ if(c==='"'){q=true;i++;} else if(c===','){row.push(field);field='';i++;} else if(c==='\n'||c==='\r'){row.push(field);rows.push(row);row=[];field=''; if(c==='\r'&&text[i+1]==='\n')i++; i++;} else {field+=c;i++;} }
+  }
+  if(field||row.length){row.push(field);rows.push(row);}
+  const head=rows.shift().map(h=>h.trim());
+  return rows.map(r=>{ const o={}; head.forEach((h,k)=>o[h]=r[k]); return o; });
+}
+function importCSV(text){
+  const rows=parseCSV(text);
+  if(!rows.length) throw new Error('CSV пуст');
+  const byArt={}; const dailyMap={}; const stockByArticle={};
+  rows.forEach(r=>{
+    const date=(r.date||'').slice(0,10); const art=String(r.article||'').trim();
+    if(!art) return;
+    const qty=+r.qty||0, revenue=+r.revenue||0, commission=+r.commission||0, returns=+r.returns||0, ad=+r.ad_spend||0, stock=+r.stock||0;
+    byArt[art]=byArt[art]||{nmId:art,article:art,name:'Товар '+art,price:0,cost:0};
+    if(!dailyMap[date]) dailyMap[date]={date,lines:{}};
+    const L=dailyMap[date].lines[art]||(dailyMap[date].lines[art]={article:art,qty:0,revenue:0,commission:0,returns:0,adSpend:0,orders:0,stock:0});
+    L.qty+=qty; L.revenue+=revenue; L.commission+=commission; L.returns+=returns; L.adSpend+=ad; L.orders+=qty; L.stock+=stock;
+    stockByArticle[art]=(stockByArticle[art]||0)+stock;
+  });
+  state.goods=Object.values(byArt); state.daily=Object.values(dailyMap).map(d=>({date:d.date,lines:Object.values(d.lines)})).sort((a,b)=>a.date<b.date?-1:1);
+  state.stockByArticle=stockByArticle; state.source='csv'; state.lastSync=new Date().toLocaleString('ru-RU');
+  renderAll(); toast('CSV загружен: '+rows.length+' строк');
+}
+function exportCSV(){
+  const {from,to}=periodRange(state.period,state.anchor);
+  const rows=aggPeriod(from,to);
+  const head=['article','name','qty','revenue','commission','returns','ad_spend','cost_per_unit','cogs','profit','roi','stock'];
+  const out=[head.join(',')];
+  rows.forEach(r=>{
+    const cost=state.costs[r.article]!=null?state.costs[r.article]:findDemoCost(r.article);
+    const cogs=cost*r.qty; const profit=r.revenue-r.commission-r.adSpend-cogs;
+    const roi=r.adSpend>0?(r.revenue/r.adSpend):'';
+    out.push([r.article,'"'+r.name.replace(/"/g,'""')+'',r.qty,Math.round(r.revenue),Math.round(r.commission),r.returns,Math.round(r.adSpend),cost,Math.round(cogs),Math.round(profit),roi!==''?roi.toFixed(3):'',r.stock].join(','));
+  });
+  const blob=new Blob(['﻿'+out.join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`wb-sales-${isoDate(from)}_${isoDate(addDays(to,-1))}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast('Файл CSV выгружен');
+}
+
+/* ---------- Тост ---------- */
+let toastT;
+function toast(msg,err){ const t=$('#toast'); t.textContent=msg; t.className='toast show'+(err?' err':''); clearTimeout(toastT); toastT=setTimeout(()=>t.className='toast',2600); }
+
+/* ---------- Шифрование токена (Web Crypto API) ---------- */
+// Токен хранится зашифрованным паролем. Открытый токен живёт только в памяти,
+// пока дашборд открыт. Перезагрузка — нужно снова ввести пароль.
+function toB64(buf){ const b=new Uint8Array(buf); let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return btoa(s); }
+function fromB64(s){ const b=atob(s); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++) u[i]=b.charCodeAt(i); return u; }
+async function deriveAesKey(password, salt){
+  const baseKey=await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:120000, hash:'SHA-256'}, baseKey, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+async function encryptToken(token, password){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveAesKey(password, salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(token));
+  return {enc:toB64(ct), salt:toB64(salt), iv:toB64(iv)};
+}
+async function decryptToken(pkg, password){
+  const salt=fromB64(pkg.salt), iv=fromB64(pkg.iv);
+  const key=await deriveAesKey(password, salt);
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, fromB64(pkg.enc));
+  return new TextDecoder().decode(pt);
+}
+
+// Ключ «привязан к браузеру»: выводим из User-Agent + canvas-fingerprint.
+// Ключ лежит в localStorage — это НЕ пароль и НЕ настоящая защита,
+// просто чтобы токен не валялся открытым в DevTools.
+// Если очистить localStorage или сменить браузер — токен придётся
+// подгрузить снова через «📥 Из .env» или вставить руками.
+async function getBrowserFingerprint(){
+  const ua = navigator.userAgent + '|' + navigator.language + '|' + (screen.width+'x'+screen.height);
+  // canvas fingerprint — стабильный для одного браузера/ОС
+  let canvas = '';
+  try{
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.textBaseline='top'; ctx.font='14px Arial';
+    ctx.fillStyle='#f60'; ctx.fillRect(125,1,62,20);
+    ctx.fillStyle='#069'; ctx.fillText('wb-fp-ñ',2,15);
+    canvas = c.toDataURL();
+  }catch(e){ canvas = 'no-canvas'; }
+  const raw = ua + '|' + canvas;
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+  return new Uint8Array(buf);
+}
+async function getOrCreateBrowserKey(){
+  let k = localStorage.getItem('wb_browser_key');
+  if(k) return fromB64(k);
+  const fp = await getBrowserFingerprint();
+  // используем fingerprint как «пароль» — токен можно расшифровать
+  // только из этого браузера
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const key = await deriveAesKey(btoa(String.fromCharCode(...fp)), salt);
+  // сохраняем salt (fingerprint каждый раз пересчитаем)
+  localStorage.setItem('wb_browser_key', toB64(salt));
+  return { key, salt };
+}
+async function encryptTokenBrowser(token){
+  const { key, salt } = await getOrCreateBrowserKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(token));
+  return { enc: toB64(ct), salt: toB64(salt), iv: toB64(iv) };
+}
+async function decryptTokenBrowser(pkg){
+  const fp = await getBrowserFingerprint();
+  const key = await deriveAesKey(btoa(String.fromCharCode(...fp)), fromB64(pkg.salt));
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:fromB64(pkg.iv)}, key, fromB64(pkg.enc));
+  return new TextDecoder().decode(pt);
+}
+
+/* ---------- Диалог настроек ---------- */
+const dlg=$('#settingsDlg');
+// Заполнение таблицы товаров (себестоимость + тип) в Настройках
+function renderCostTable(){
+  const types=allTypes();
+  const rows=state.goods.length?state.goods:DEMO_GOODS.map(g=>({...g}));
+  const opts=(cur)=>'<option value="">— без типа —</option>'+types.map(t=>`<option value="${t}" ${t===cur?'selected':''}>${t}</option>`).join('');
+  $('#costBody').innerHTML = rows.map(g=>{
+    const cost=state.costs[g.article]!=null?state.costs[g.article]:findDemoCost(g.article);
+    const cur=state.types[g.article]!=null?state.types[g.article]:(DEMO_ART_TYPE[g.article]||'');
+    return `<tr>
+      <td><b>${g.article}</b></td>
+      <td>${g.name||''}</td>
+      <td><select data-art-type="${g.article}">${opts(cur)}</select></td>
+      <td class="num"><input type="number" min="0" step="1" data-art-cost="${g.article}" value="${cost>0?Math.round(cost):''}" placeholder="0"></td>
+    </tr>`;
+  }).join('');
+  // обработчики
+  $('#costBody').querySelectorAll('input[data-art-cost]').forEach(inp=>{
+    inp.addEventListener('change',()=>{
+      const art=inp.dataset.artCost; const v=parseFloat(inp.value);
+      if(isNaN(v)||v<=0) delete state.costs[art]; else state.costs[art]=v;
+      localStorage.setItem('wb_costs',JSON.stringify(state.costs));
+      toast('Себестоимость сохранена'); renderAll();
+    });
+  });
+  $('#costBody').querySelectorAll('select[data-art-type]').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      const art=sel.dataset.artType; state.types[art]=sel.value;
+      localStorage.setItem('wb_types',JSON.stringify(state.types));
+      toast('Тип товара сохранён'); renderAll();
+    });
+  });
+}
+/* === Импорт/экспорт себестоимости через CSV ============================== */
+
+// Минимальный CSV-парсер: понимает запятые, переносы строк в кавычках и кавычки.
+// Лишние пробелы по краям ячеек убираются. Поддерживает кавычки-экранирование """.
+function parseCSV(text){
+  const rows = [];
+  let cur = [], field = '', inQ = false;
+  for(let i=0;i<text.length;i++){
+    const ch = text[i], nx = text[i+1];
+    if(inQ){
+      if(ch === '"' && nx === '"'){ field += '"'; i++; }
+      else if(ch === '"'){ inQ = false; }
+      else field += ch;
+    }else{
+      if(ch === '"') inQ = true;
+      else if(ch === ','){ cur.push(field); field=''; }
+      else if(ch === '\n'){ cur.push(field); rows.push(cur); cur=[]; field=''; }
+      else if(ch === '\r'){ /* skip — \n сам закроет строку */ }
+      else field += ch;
+    }
+  }
+  if(field.length || cur.length){ cur.push(field); rows.push(cur); }
+  // убираем пустые хвостовые строки
+  while(rows.length && rows[rows.length-1].every(c=>c.trim()==='')) rows.pop();
+  return rows;
+}
+
+// Маппинг заголовков CSV → ключи. Понимаем несколько вариантов имени.
+const CSV_KEY_ALIASES = {
+  vendorcode: 'vendorCode', 'артикул': 'vendorCode', 'артикул wb': 'vendorCode', 'sku': 'vendorCode',
+  nmid: 'nmId', 'nm id': 'nmId', 'nm': 'nmId',
+  barcode: 'barcode', 'бар-код': 'barcode', 'баркод': 'barcode', 'ean': 'barcode', 'ean13': 'barcode', 'штрихкод': 'barcode', 'штрих-код': 'barcode',
+  cost: 'cost', 'себестоимость': 'cost', 'cost_per_unit': 'cost', 'себест': 'cost', 'закупка': 'cost', 'цена закупки': 'cost',
+};
+
+function normalizeRow(row){
+  const out = {};
+  row.forEach(cell => {
+    const k = String(cell || '').trim().toLowerCase().replace(/ё/g,'е');
+    const norm = CSV_KEY_ALIASES[k];
+    if(norm) out.__cur = norm;
+  });
+  return out;
+}
+
+// Читает CSV и возвращает [{vendorCode, nmId, barcode, cost}, ...]
+// Первая строка — заголовки (или распознаём по псевдонимам).
+function readCostsCSV(text){
+  const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ''));
+  if(rows.length < 2) return [];
+  // разбираем заголовки
+  const header = rows[0].map(c => String(c||'').trim());
+  const aliasHeader = header.map(h => String(h||'').trim().toLowerCase().replace(/ё/g,'е'));
+  const idx = {};
+  aliasHeader.forEach((h, i) => {
+    const k = CSV_KEY_ALIASES[h];
+    if(k && idx[k] == null) idx[k] = i;
+  });
+  // fallback: если не нашли ни одной колонки — пробуем формат по позициям: vendorCode,nmId,barcode,cost
+  const hasAny = Object.keys(idx).length > 0;
+  const out = [];
+  for(let r = 1; r < rows.length; r++){
+    const row = rows[r];
+    let vendorCode='', nmId='', barcode='', cost='';
+    if(hasAny){
+      if(idx.vendorCode != null) vendorCode = String(row[idx.vendorCode] || '').trim();
+      if(idx.nmId       != null) nmId       = String(row[idx.nmId] || '').trim();
+      if(idx.barcode    != null) barcode    = String(row[idx.barcode] || '').trim();
+      if(idx.cost       != null) cost       = String(row[idx.cost] || '').trim().replace(/\s+/g,'').replace(',', '.');
+    }else{
+      // без заголовков: первые 4 ячейки
+      vendorCode = String(row[0] || '').trim();
+      nmId       = String(row[1] || '').trim();
+      barcode    = String(row[2] || '').trim();
+      cost       = String(row[3] || '').trim().replace(/\s+/g,'').replace(',', '.');
+    }
+    const c = parseFloat(cost);
+    if(!vendorCode && !nmId && !barcode) continue;
+    if(!isFinite(c) || c < 0) continue;
+    out.push({ vendorCode, nmId: nmId ? Number(nmId) : '', barcode, cost: c });
+  }
+  return out;
+}
+
+// Индексирует товары дашборда по всем трём ключам сразу.
+// Базовый goods из state.goods (то, что пришло из WB); vendorCode==article, nmId==goods[i].nmId.
+// Если у товара нет barcode — используем пустую строку (сопоставление по barcode тогда не сработает).
+function buildGoodsIndex(){
+  const byVendor = new Map(), byNmId = new Map(), byBarcode = new Map();
+  // Бар-коды берём из дополнительного кэша, если заказчик их положил туда раньше
+  // (поле wb_barcodes — необязательное, заполняется отдельной кнопкой, если будет).
+  const barcodes = JSON.parse(localStorage.getItem('wb_barcodes') || '{}'); // article -> [barcode,...]
+  (state.goods || []).forEach(g => {
+    if(g.article) byVendor.set(String(g.article).trim(), g);
+    if(g.nmId) byNmId.set(Number(g.nmId), g);
+    (barcodes[g.article] || []).forEach(bc => byBarcode.set(String(bc).trim(), g));
+  });
+  return { byVendor, byNmId, byBarcode };
+}
+
+// Применяет распарсенные строки к state.costs. Возвращает отчёт.
+function applyCosts(rows){
+  const idx = buildGoodsIndex();
+  const matched = [], unmatched = [], invalid = [];
+  rows.forEach((r, i) => {
+    let g = null, by = '';
+    if(r.barcode && (g = idx.byBarcode.get(String(r.barcode).trim()))){ by = 'barcode'; }
+    else if(r.nmId && (g = idx.byNmId.get(Number(r.nmId)))){ by = 'nmId'; }
+    else if(r.vendorCode && (g = idx.byVendor.get(String(r.vendorCode).trim()))){ by = 'vendorCode'; }
+    if(g){
+      state.costs[g.article] = r.cost;
+      matched.push({ row: i+2, article: g.article, name: g.name, cost: r.cost, by });
+    }else{
+      unmatched.push({ row: i+2, vendorCode: r.vendorCode, nmId: r.nmId, barcode: r.barcode, cost: r.cost });
+    }
+  });
+  localStorage.setItem('wb_costs', JSON.stringify(state.costs));
+  return { matched, unmatched, invalid };
+}
+
+function renderImportReport(rep){
+  const el = $('#importReport');
+  if(!el) return;
+  let html = `<b>Импорт:</b> ${rep.matched.length} сопоставлено, ${rep.unmatched.length} не найдено.`;
+  if(rep.unmatched.length){
+    html += `<br><span style="color:var(--warn,#c66)">Не сопоставлено (нет такого артикула/barcode/nmId в текущих товарах):</span>`;
+    html += '<ul style="margin:4px 0 0 16px;max-height:120px;overflow:auto;font-size:12px">';
+    rep.unmatched.slice(0, 50).forEach(u => {
+      html += `<li>строка ${u.row}: <code>${u.vendorCode||'—'}</code> / <code>${u.nmId||'—'}</code> / <code>${u.barcode||'—'}</code> → ${u.cost} ₽</li>`;
+    });
+    if(rep.unmatched.length > 50) html += `<li>…и ещё ${rep.unmatched.length - 50}</li>`;
+    html += '</ul>';
+    html += `<div class="hint" style="margin-top:4px">Подсказка: проверь, что нужный товар есть в дашборде (Настройки → «Товары»). Если его нет — обнови данные из WB (⟳).</div>`;
+  }
+  el.innerHTML = html;
+}
+
+function exportCostsCSV(){
+  const idx = buildGoodsIndex();
+  // Соберём все известные товары и текущие себестоимости
+  const goods = state.goods && state.goods.length ? state.goods : [];
+  if(!goods.length){ toast('Нет товаров для экспорта. Загрузи данные из WB или демо.', true); return; }
+  const lines = ['vendorCode,nmId,name,cost'];
+  goods.forEach(g => {
+    const c = state.costs[g.article] != null ? state.costs[g.article] : '';
+    // CSV: кавычки, если в поле есть запятая/кавычка
+    const esc = s => /[",\n]/.test(s) ? `"${String(s).replace(/"/g,'""')}"` : s;
+    lines.push([esc(g.article||''), esc(g.nmId||''), esc(g.name||''), c].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'costs-current.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('Себестоимости выгружены в costs-current.csv');
+}
+
+// Навешиваем обработчики один раз при загрузке страницы
+function bindCostImport(){
+  const btn = $('#importCostBtn'); const inp = $('#importCostFile');
+  if(!btn || !inp) return;
+  btn.onclick = () => inp.click();
+  inp.onchange = () => {
+    const f = inp.files && inp.files[0];
+    if(!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try{
+        const rows = readCostsCSV(String(r.result || ''));
+        if(!rows.length){ toast('CSV пустой или нет распознанных строк', true); return; }
+        const rep = applyCosts(rows);
+        renderCostTable(); renderAll();
+        renderImportReport(rep);
+        toast(`Импорт: ${rep.matched.length} из ${rows.length} строк`, false, 2500);
+      }catch(e){ toast('Ошибка чтения CSV: '+e.message, true); }
+      inp.value = '';
+    };
+    r.readAsText(f, 'utf-8');
+  };
+  const exp = $('#exportCostBtn');
+  if(exp) exp.onclick = exportCostsCSV;
+}
+
+// Статус пароля/токена в шапке вкладки подключения
+function renderPwdStatus(){
+  const el=$('#pwdStatus');
+  if(state.tokenEnc && state.token){ el.className='pwd-status open'; el.textContent='🔓 Токен разблокирован — можно обновлять данные и смотреть токен'; }
+  else if(state.tokenEnc && !state.token){ el.className='pwd-status lock'; el.textContent='🔒 Токен задан, но заблокирован. Введи пароль и нажми «Разблокировать токен»'; }
+  else { el.className='pwd-status none'; el.textContent='Токен не задан. Вставь токен и пароль, затем нажми «Сохранить»'; }
+  $('#tokenState').textContent = state.token?'токен разблокирован ✓':state.tokenEnc?'токен заблокирован':'токен не задан';
+}
+function openSettings(){
+  // открываем на вкладке подключения; токен показываем только если разблокирован
+  selectTab('tab-conn');
+  $('#tokenIn').value = state.token || '';
+  $('#tokenIn').type='password';
+  $('#pwdIn').value='';
+  renderPwdStatus();
+  renderCostTable();
+  dlg.showModal();
+}
+function selectTab(id){
+  document.querySelectorAll('#dlgTabs button').forEach(b=>b.ariaSelected = b.dataset.tab===id?'true':'false');
+  document.querySelectorAll('.dlg-tab').forEach(t=>t.classList.toggle('active', t.id===id));
+}
+$('#settingsBtn').onclick=openSettings;
+$('#dlgCancel').onclick=()=>dlg.close();
+$('#dlgTabs').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b) selectTab(b.dataset.tab); });
+// Глаз: показать токен — только если разблокирован
+$('#tokenEye').onclick=()=>{
+  if(!state.token){ toast('Сначала разблокируй токен паролем',true); return; }
+  const inp=$('#tokenIn'); inp.type = inp.type==='password'?'text':'password';
+};
+// Разблокировать: расшифровать токен введённым паролем
+$('#unlockBtn').onclick=async()=>{
+  const pwd=$('#pwdIn').value;
+  if(!pwd){ toast('Введи пароль',true); return; }
+  if(!state.tokenEnc){ toast('Токен не задан — сначала сохрани его',true); return; }
+  try{
+    const tok=await decryptToken(state.tokenEnc, pwd);
+    state.token=tok; state.tokenPwd=pwd;
+    $('#tokenIn').value=tok;
+    $('#refreshBtn').disabled=false;
+    renderPwdStatus();
+    toast('Токен разблокирован');
+  }catch(e){ toast('Неверный пароль',true); }
+};
+// Заблокировать: убрать открытый токен из памяти
+$('#lockBtn').onclick=()=>{
+  state.token=''; state.tokenPwd=null;
+  $('#tokenIn').value=''; $('#tokenIn').type='password';
+  $('#refreshBtn').disabled=true;
+  renderPwdStatus();
+  toast('Токен заблокирован');
+};
+// Загрузить токен из .env через локальный serve.py (/api/wb-config)
+$('#envBtn').onclick=async()=>{
+  const btn=$('#envBtn'); btn.disabled=true;
+  try{
+    const r=await fetch('/api/wb-config',{cache:'no-store'});
+    if(r.status===403){ toast('Токен отдаётся только с localhost — открой дашборд через serve.py',true); return; }
+    if(r.status===503){ toast('В .env нет WB_TOKEN — добавь строку WB_TOKEN=...',true); return; }
+    if(!r.ok){ toast('Не удалось прочитать .env: HTTP '+r.status,true); return; }
+    const {token}=await r.json();
+    if(!token){ toast('.env ответил без токена',true); return; }
+    // Подставляем в поле и в память (пароль пользователь ещё не вводил — это разблокировка ниже)
+    state.token=token;
+    $('#tokenIn').value=token;
+    $('#tokenIn').type='text';
+    $('#refreshBtn').disabled=false;
+    renderPwdStatus();
+    toast('Токен из .env подтянут. Задай пароль и нажми «Сохранить», чтобы зашифровать в localStorage.');
+  }catch(e){ toast('Не удалось связаться с serve.py: '+e.message,true); }
+  finally{ btn.disabled=false; }
+};
+// Тест подключения — один запрос к WB API
+$('#testBtn').onclick=async()=>{
+  const btn=$('#testBtn'); btn.disabled=true;
+  try{
+    if(!state.token){ toast('Сначала подгрузи токен (из .env или вручную)',true); return; }
+    btn.textContent='⏳ Проверяю...';
+    // Самый дешёвый тест: список карточек с лимитом 1
+    const cards=await wbPost('content','/content/v2/get/cards/list',{filter:{allowed:true,limit:1}});
+    const items=cards?.cards||cards?.result?.cards||[];
+    toast('OK: WB отвечает. Тест получил '+items.length+' карточек (лимит 1)');
+  }catch(e){
+    const msg=String(e.message||e);
+    if(msg.includes('401')) toast('Токен неверный или просрочен (401)',true);
+    else if(msg.includes('403')) toast('Нет доступа к контенту (403) — перевыпусти токен с галочкой «Контент»',true);
+    else if(msg.includes('429')) toast('Слишком часто (429) — подожди минуту',true);
+    else toast('Тест не прошёл: '+msg,true);
+  }finally{
+    btn.disabled=false; btn.textContent='🔌 Тест';
+  }
+};
+// 💾 Запомнить в этом браузере — зашифровать ключом браузера и сохранить в LocalStorage
+$('#rememberBtn').onclick=async()=>{
+  const tok = state.token || $('#tokenIn').value.trim();
+  if(!tok){ toast('Сначала подгрузи токен (из .env или вставь руками)',true); return; }
+  try{
+    const enc = await encryptTokenBrowser(tok);
+    localStorage.setItem('wb_token_enc', JSON.stringify(enc));
+    state.tokenEnc = enc; state.token = tok; state.tokenPwd = null;
+    $('#tokenIn').value = tok;
+    $('#refreshBtn').disabled = false;
+    renderPwdStatus();
+    toast('Токен запомнен в этом браузере. Будет подгружаться автоматически.');
+  }catch(e){ toast('Не удалось запомнить: '+e.message,true); }
+};
+// 🗑 Забыть — удалить токен и ключ браузера из LocalStorage
+$('#forgetBtn').onclick=()=>{
+  if(!confirm('Удалить токен и ключ из браузера? После этого придётся снова подгружать через «Из .env».')) return;
+  localStorage.removeItem('wb_token_enc');
+  localStorage.removeItem('wb_browser_key');
+  state.tokenEnc = null; state.token = ''; state.tokenPwd = null;
+  $('#tokenIn').value = '';
+  $('#refreshBtn').disabled = true;
+  renderPwdStatus();
+  toast('Токен удалён из браузера');
+};
+
+// Начальная дата и кэш — incremental sync
+function getInitialDate(){
+  return localStorage.getItem('wb_initial_date') || isoDate(new Date(new Date().getFullYear(),0,1));
+}
+function setInitialDate(v){
+  localStorage.setItem('wb_initial_date', v);
+}
+function renderCacheInfo(){
+  const el = $('#cacheInfo'); if(!el) return;
+  const sales = Object.keys(JSON.parse(localStorage.getItem('wb_sales_cache')||'{}'));
+  const orders = Object.keys(JSON.parse(localStorage.getItem('wb_orders_cache')||'{}'));
+  const adv = Object.keys(JSON.parse(localStorage.getItem('wb_adv_cache')||'{}'));
+  const camp = localStorage.getItem('wb_adv_campaigns') || '[]';
+  const campCount = JSON.parse(camp).length;
+  const last = arr => arr.filter(k=>/^\d{4}/.test(k)).sort().pop();
+  el.innerHTML = `
+    Кэш продаж: <b>${sales.length} ${last(sales)?'дн., до '+last(sales):'пусто'}</b><br>
+    Кэш заказов: <b>${orders.length} ${last(orders)?'дн., до '+last(orders):'пусто'}</b><br>
+    Кэш рекламы: <b>${adv.length} ${last(adv)?'дн., до '+last(adv):'пусто'}</b><br>
+    Кампаний WB: <b>${campCount}</b>
+  `;
+}
+$('#saveInitialBtn').onclick=()=>{
+  const v = $('#initialDateIn').value;
+  if(!v){ toast('Выбери дату', true); return; }
+  setInitialDate(v);
+  toast('Начальная дата сохранена. Следующая загрузка начнётся с неё (если кэш пуст).');
+};
+$('#clearCacheBtn').onclick=()=>{
+  if(!confirm('Очистить весь кэш? Следующее обновление заново скачает данные с начальной даты.')) return;
+  ['wb_sales_cache','wb_orders_cache','wb_adv_cache','wb_adv_campaigns','wb_adv_campaigns_ts','wb_goods_cache','wb_daily_cache','wb_last_sync']
+    .forEach(k => localStorage.removeItem(k));
+  renderCacheInfo();
+  toast('Кэш очищен');
+};
+// Сохранить: зашифровать токен паролем (или очистить)
+$('#dlgSave').onclick=async()=>{
+  const tok=$('#tokenIn').value.trim();
+  const pwd=$('#pwdIn').value;
+  if(tok && !pwd){ toast('Задай пароль, чтобы сохранить токен',true); return; }
+  if(tok){
+    try{
+      const enc=await encryptToken(tok, pwd);
+      localStorage.setItem('wb_token_enc',JSON.stringify(enc));
+      localStorage.removeItem('wb_token'); // убираем старый открытый токен, если был
+      state.tokenEnc=enc; state.token=tok; state.tokenPwd=pwd;
+      $('#refreshBtn').disabled=false;
+      renderPwdStatus();
+      dlg.close(); toast('Токен сохранён (зашифрован)');
+    }catch(e){ toast('Не удалось сохранить: '+e.message,true); }
+  } else {
+    localStorage.removeItem('wb_token_enc'); localStorage.removeItem('wb_token');
+    state.tokenEnc=null; state.token='';
+    $('#refreshBtn').disabled=true;
+    renderPwdStatus();
+    dlg.close(); toast('Токен очищен');
+  }
+};
+// Новый тип — добавить в список
+$('#addTypeBtn').onclick=()=>{
+  const name=prompt('Название нового типа товара:');
+  if(!name) return;
+  const t=name.trim();
+  if(!t) return;
+  if(!state.extraTypes.includes(t) && !DEMO_TYPES.includes(t)){
+    state.extraTypes.push(t);
+    localStorage.setItem('wb_extra_types',JSON.stringify(state.extraTypes));
+  }
+  renderCostTable();
+  toast('Тип «'+t+'» добавлен');
+};
+
+/* ---------- Обновить ---------- */
+async function refresh(){
+  if(state.loading) return; state.loading=true;
+  const btn=$('#refreshBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Обновить';
+  try{
+    await loadFromAPI();
+    renderAll(); toast('Данные обновлены из кабинета WB');
+  }catch(e){
+    toast('Ошибка: '+e.message.slice(0,90),true);
+  }finally{
+    state.loading=false; btn.disabled=false; btn.innerHTML='⟳ Обновить';
+  }
+}
+$('#refreshBtn').onclick=refresh;
+$('#refreshBtn').disabled=!state.token;
+
+/* ---------- Прочие кнопки ---------- */
+$('#themeBtn').onclick=()=>{ const cur=document.documentElement.dataset.theme; const next=cur==='dark'?'light':cur==='light'?'':'dark'; if(next) document.documentElement.dataset.theme=next; else delete document.documentElement.dataset.theme; localStorage.setItem('wb_theme',next); applyThemeIcon(); };
+function applyThemeIcon(){ const cur=document.documentElement.dataset.theme|| (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'); $('#themeBtn').textContent=cur==='dark'?'☀':'🌙'; }
+// Показ/скрытие полей диапазона в зависимости от выбранного периода
+function toggleRangeInputs(){
+  const custom = state.period==='custom';
+  $('#anchorLab').hidden = custom;
+  $('#anchorDate').hidden = custom;
+  $('#fromDate').hidden = !custom;
+  $('#toDate').hidden = !custom;
+  document.querySelectorAll('.range-lab').forEach(el=>el.hidden=!custom);
+}
+// Обновление выпадающего списка типов под текущие товары
+function syncTypeSelect(){
+  const sel=$('#typeSel'); const cur=state.typeFilter;
+  const types=allTypes();
+  sel.innerHTML='<option value="all">Все типы</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  sel.value = types.includes(cur)?cur:'all';
+  state.typeFilter = sel.value;
+}
+$('#periodSel').addEventListener('change',e=>{ state.period=e.target.value; toggleRangeInputs(); renderAll(); });
+$('#typeSel').addEventListener('change',e=>{ state.typeFilter=e.target.value; renderAll(); });
+$('#fromDate').addEventListener('change',e=>{ state.customFrom=e.target.value?new Date(e.target.value):null; renderAll(); });
+$('#toDate').addEventListener('change',e=>{ state.customTo=e.target.value?new Date(e.target.value):null; renderAll(); });
+$('#metricPick').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; state.metric=b.dataset.m; $('#metricPick').querySelectorAll('button').forEach(x=>x.ariaPressed='false'); b.ariaPressed='true'; renderDyn(); });
+$('#anchorDate').addEventListener('change',e=>{ state.anchor=e.target.value?new Date(e.target.value):new Date(); renderAll(); });
+$('#exportBtn').onclick=exportCSV;
+$('#csvBtn').onclick=()=>$('#csvFile').click();
+$('#csvFile').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{ try{importCSV(rd.result);}catch(err){toast('Ошибка CSV: '+err.message,true);} }; rd.readAsText(f,'UTF-8'); e.target.value=''; });
+$('#pickCsvBtn').onclick=()=>$('#csvFile').click();
+$('#loadDemoBtn').onclick=()=>{ const d=buildDemo(); state.goods=d.goods; state.daily=d.daily; state.stockByArticle=d.stockByArticle; state.source='demo'; state.lastSync=null; renderAll(); renderCostTable(); toast('Демо-данные загружены'); };
+$('#clearCostBtn').onclick=()=>{ state.costs={}; localStorage.removeItem('wb_costs'); renderAll(); renderCostTable(); toast('Себестоимости очищены'); };
+
+/* ---------- Старт ---------- */
+async function init(){
+  // тема
+  const savedTheme=localStorage.getItem('wb_theme')||'';
+  if(savedTheme) document.documentElement.dataset.theme=savedTheme;
+  applyThemeIcon();
+  // данные: пробуем кеш API, иначе демо
+  // (токен может быть заблокирован — кеш всё равно покажем, а «Обновить» включится после ввода пароля)
+  const goodsCache=localStorage.getItem('wb_goods_cache');
+  const dailyCache=localStorage.getItem('wb_daily_cache');
+  if(dailyCache && goodsCache){
+    try{ state.goods=JSON.parse(goodsCache); state.daily=JSON.parse(dailyCache); state.source='api'; state.lastSync=localStorage.getItem('wb_last_sync')||null; }
+    catch(e){ loadDemo(); }
+  } else { loadDemo(); }
+  // автозагрузка токена из LocalStorage: если ключ браузера есть,
+  // пытаемся расшифровать токен без пароля
+  try{
+    if(state.tokenEnc && localStorage.getItem('wb_browser_key')){
+      const t = await decryptTokenBrowser(state.tokenEnc);
+      state.token = t; $('#tokenIn').value = t;
+      $('#refreshBtn').disabled = false;
+    }
+  }catch(e){ /* ключ не подходит — оставляем как есть, попросим пароль */ }
+  $('#anchorDate').value=isoDate(new Date());
+  // Начальная дата для incremental-синка — из настроек, по умолчанию 1 января текущего года
+  if($('#initialDateIn')){
+    $('#initialDateIn').value = getInitialDate();
+    $('#initialDateIn').max = isoDate(new Date());
+  }
+  renderCacheInfo();
+  // диапазон по умолчанию: с начала года по сегодня
+  const yStart=new Date(new Date().getFullYear(),0,1);
+  if(!state.customFrom) state.customFrom=yStart;
+  if(!state.customTo) state.customTo=new Date();
+  $('#fromDate').value=isoDate(state.customFrom);
+  $('#toDate').value=isoDate(state.customTo);
+  $('#periodSel').value=state.period;
+  toggleRangeInputs();
+  $('#refreshBtn').disabled=!state.token;
+  renderAll();
+}
+function loadDemo(){ const d=buildDemo(); state.goods=d.goods; state.daily=d.daily; state.stockByArticle=d.stockByArticle; state.source='demo'; }
+init().catch(e => console.error('init failed:', e));
+bindCostImport();
+
+window.addEventListener('resize',()=>{ renderDyn(); renderAds(); renderProfit(); renderStock(); });
+
+/* ResizeObserver на контейнерах графиков и на самом .wrap — перерисовываем при смене ширины,
+   чтобы дашборд всегда занимал всю ширину окна (Safari не всегда ловит window.resize). */
+if(typeof ResizeObserver!=='undefined'){
+  let raf=0;
+  const onChange=()=>{ cancelAnimationFrame(raf); raf=requestAnimationFrame(()=>{ renderDyn(); renderAds(); renderProfit(); renderStock(); }); };
+  const obs=new ResizeObserver(onChange);
+  ['#dynChart','#adsChart','#profitChart','#stockChart'].forEach(sel=>{
+    const el=$(sel); if(!el)return; const wrap=el.closest('.chart-wrap,.pie-wrap')||el.parentElement;
+    if(wrap) obs.observe(wrap);
+  });
+  /* Наблюдаем за самим .wrap — если что-то снаружи (например, scrollbar или сайдбар)
+     изменит его ширину, графики пересчитаются */
+  const wrapEl=$('.wrap'); if(wrapEl) obs.observe(wrapEl);
+}
+</script>
+</body>
+</html>
