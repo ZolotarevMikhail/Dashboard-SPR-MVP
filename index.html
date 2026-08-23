@@ -909,11 +909,14 @@ function renderProfit(){
   const W=svg.parentElement.clientWidth-2; svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svg.innerHTML='';
   const labW=Math.min(160,W*0.34);
+  // Укорачиваем название под реальную ширину колонки (шрифт 10.5px ≈ 6px на кириллический символ)
+  const maxChars=Math.max(8,Math.floor((labW-16)/6));
+  const cutName=n=>n.length>maxChars?n.slice(0,maxChars-1)+'…':n;
   const valW=78; const pw=W-labW-valW-16; const max=Math.max(...rows.map(r=>Math.abs(r.profit)),1);
   const niceM=niceMax(max);
   rows.forEach((r,i)=>{
     const y=12+i*28;
-    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},r.name.length>26?r.name.slice(0,24)+'…':r.name));
+    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},cutName(r.name)));
     const w=pw*Math.abs(r.profit)/niceM;
     const x=labW;
     svg.appendChild(el('rect',{x,y:6+y,width:Math.max(1,w),height:16,rx:3,fill:r.profit>=0?'var(--series-1)':'var(--crit)'}));
@@ -934,10 +937,13 @@ function renderStock(){
   svg.setAttribute('height',H); const W=svg.parentElement.clientWidth-2;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`); svg.innerHTML='';
   const labW=Math.min(160,W*0.34); const valW=54; const pw=W-labW-valW-16;
+  // Как в renderProfit: название под реальную ширину колонки
+  const maxChars=Math.max(8,Math.floor((labW-16)/6));
+  const cutName=n=>n.length>maxChars?n.slice(0,maxChars-1)+'…':n;
   const max=Math.max(...rows.map(r=>r.stock),1);
   rows.forEach((r,i)=>{
     const y=12+i*28;
-    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},r.name.length>26?r.name.slice(0,24)+'…':r.name));
+    svg.appendChild(el('text',{class:'axis-text',x:labW-8,y:y+10,'text-anchor':'end'},cutName(r.name)));
     const w=pw*r.stock/max;
     const low=r.stock<20;
     svg.appendChild(el('rect',{x:labW,y:6+y,width:Math.max(1,w),height:16,rx:3,fill:low?'var(--crit)':'var(--series-3)'}));
